@@ -28,13 +28,14 @@ def main(args):
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val/loss',
-        filename='cnn_ae_{epoch:02d}_{val/loss:.4f}',
+        filename='cnn_ae_epoch={epoch}-step={step}-val_acc={val/loss:.2f}',
+        auto_insert_metric_name=False,
         save_top_k=2,
         mode='min'
     )
 
     wandb_logger = WandbLogger(
-        project='Satelite-Interference', log_model=True, save_dir='./logs')
+        project='Satelite-Interference', log_model=True)
 
     trainer = Trainer(
         max_epochs=args.epochs,
