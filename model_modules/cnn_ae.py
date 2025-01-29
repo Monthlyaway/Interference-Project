@@ -10,6 +10,7 @@ import torch.nn.functional as F
 class CNNAutoencoder(L.LightningModule):
     def __init__(self, input_length=800, latent_dim=128, learning_rate=1e-3):
         super(CNNAutoencoder, self).__init__()
+        self.save_hyperparameters()
         self.learning_rate = learning_rate
 
         # Time-Domain Encoder
