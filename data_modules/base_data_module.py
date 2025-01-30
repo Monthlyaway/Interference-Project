@@ -2,6 +2,8 @@ import lightning as L
 import scipy
 import torch
 from torch.utils.data import Dataset, DataLoader
+import torchvision.transforms.v2 as transforms
+import numpy as np
 
 
 def load_mat_data(file_path, data_key_contains='Data'):
@@ -63,23 +65,43 @@ class BaseDataModule(L.LightningDataModule):
         self.spectrum_test_labels_path = 'data_modules/2_Spectrm_Datasets/Spectrum_TestLabels.mat'
 
     def prepare_data(self):
-        pass
+        signal_train = load_mat_data(self.signal_train_path)
+        spectrum_train = load_mat_data(self.spectrum_train_path)
+
+        self.signal_min = signal_train.min()
+        self.signal_max = signal_train.max()
+        self.spectrum_min = spectrum_train.min()
+        self.spectrum_max = spectrum_train.max()
 
     def setup(self, stage):
         if stage == 'fit' or stage is None:
             signal_train = load_mat_data(self.signal_train_path)
             spectrum_train = load_mat_data(self.spectrum_train_path)
+            signal_train = (signal_train - self.signal_min) / \
+                (self.signal_max - self.signal_min)
+            spectrum_train = (spectrum_train - self.spectrum_min) / \
+                (self.spectrum_max - self.spectrum_min)
             self.train_dataset = TimeFrequencyDataset(
                 signal_train, spectrum_train)
 
             signal_val = load_mat_data(self.signal_val_path)
             spectrum_val = load_mat_data(self.spectrum_val_path)
-            self.val_dataset = TimeFrequencyDataset(signal_val, spectrum_val)
+            signal_val = (signal_val - self.signal_min) / \
+                (self.signal_max - self.signal_min)
+            spectrum_val = (spectrum_val - self.spectrum_min) / \
+                (self.spectrum_max - self.spectrum_min)
+            self.val_dataset = TimeFrequencyDataset(
+                signal_val, spectrum_val)
 
         if stage == 'test' or stage is None:
             # Load test data
             signal_test = load_mat_data(self.signal_test_path)
             spectrum_test = load_mat_data(self.spectrum_test_path)
+
+            signal_test = (signal_test - self.signal_min) / \
+                (self.signal_max - self.signal_min)
+            spectrum_test = (spectrum_test - self.spectrum_min) / \
+                (self.spectrum_max - self.spectrum_min)
 
             # Load test labels
             signal_test_labels = load_mat_labels(self.signal_test_labels_path)
@@ -102,11 +124,13 @@ class BaseDataModule(L.LightningDataModule):
 
 if __name__ == '__main__':
     dm = BaseDataModule(batch_size=32)
+    dm.prepare_data()
     dm.setup('fit')
     train_loader = dm.train_dataloader()
-    print(dm.train_dataset[0]['signal'].shape)
-    print(next(iter(train_loader))['signal'].shape)
-    
+    print(next(iter(train_loader))['signal'])
+    print(next(iter(train_loader))['spectrum'])
+
     dm.setup('test')
     test_loader = dm.test_dataloader()
-    print(next(iter(test_loader))['label'].shape)
+    print(next(iter(test_loader))['label'])
+    print(next(iter(test_loader))['spectrum'])
