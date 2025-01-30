@@ -13,6 +13,7 @@ torch.set_float32_matmul_precision('medium')
 
 def main(args):
     data_module = BaseDataModule(batch_size=args.batch_size)
+    data_module.prepare_data()
 
     # model = LinearVAE(
     #     seq_len=800,
@@ -21,14 +22,15 @@ def main(args):
     #     alpha=args.alpha
     # )
 
-    model = CNNAutoencoder(800, args.latent_dim, args.lr)
+    # model = CNNAutoencoder(800, args.latent_dim, args.lr)
+    model = CNNVAE(800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
 
     # model = TransformerVAE(
     #     seq_len=800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
 
     checkpoint_callback = ModelCheckpoint(
-        monitor='val/loss',
-        filename='cnn_ae_epoch={epoch}-step={step}-val_acc={val/loss:.2f}',
+        monitor='val/total_loss',
+        filename='cnn_vae_epoch={epoch}-step={step}-val_acc={val/total_loss:.2f}',
         auto_insert_metric_name=False,
         save_top_k=2,
         mode='min'
@@ -41,8 +43,8 @@ def main(args):
         max_epochs=args.epochs,
         callbacks=[checkpoint_callback],
         logger=wandb_logger,
-        enable_model_summary=True,
         accumulate_grad_batches=2,
+        fast_dev_run=True,
     )
     print('Starting training')
     trainer.fit(model, data_module)
