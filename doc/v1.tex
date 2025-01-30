@@ -1,0 +1,145 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+\usepackage{hyperref}
+\usepackage{color}
+
+% Define red alert TODO
+\newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
+
+\title{V1}
+\author{Chunyu Yang}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\section{System Model}
+
+This study explores the downlink dynamics of forward links originating from two distinct satellite constellations. We focus primarily on satellites in geostationary orbit (GSO), serving as the main communication system. Satellites in non-geostationary orbit (NGSO), particularly those in low Earth orbit (LEO), are considered potential sources of interference to a general GSO ground station (GGS). In this section, we provide a comprehensive description of the system model, which encompasses link budget calculations and the modeling of the received digital baseband signal, shown in \autoref{fig:interference-scenario}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{dummy.png}
+    \caption{Interference model where the primary system is GSO satellites and the interference source is LEO satellites.}
+    \label{fig:interference-scenario}
+\end{figure}
+
+\subsection{Link Budget Model}
+
+In our analysis, both GSO and LEO satellites are actively transmitting signals, with their main transmission lobes consistently directed toward a GGS. At the GGS receiver, the carrier power received from the desired GSO satellite system can be calculated using the following equation:
+$$
+C = \frac{\text{EIRP}_{\text{gso}} \times G_{\text{r, gso}(\theta_0)}}{L_{\text{FS, gso}} \times  L_{\text{add}}}
+$$
+where $C $ is the received carrier power, $\text{EIRP}_{\text{gso}}$ is the equivalent isotropic radiated power of the GSO satellite, $G_{\text{r, gso}(\theta_0)}$ is the maximum receive antenna gain of the GGS, with $\theta_0$ being the boresight angle. $L_{\text{FS, gso}}$ is the free space path loss (FSPL) between the GSO satellite and the GGS. $L_{\text{add}}$ accounts for additional losses in the link, such as atmospheric and environmental losses.
+
+As LEO satellites traverse the visible sky from the GGS, the station may concurrently receive signals from one or more LEO satellites, especially when they operate in the same frequency bands as the GSO satellite. These LEO signals can elevate the interference level within the primary signal. The interference power $I_k$ received from an individual LEO satellite indexed by $k$ is calculated as:
+$$
+I_k = \frac{\text{EIRP}_{k} \times G_{\text{r, k}}(\theta_k) \times B_{\text{adj, k}}}{L_{\text{FS, k} }\times  L_{\text{add}}}
+$$
+where $B_{\text{adj, k}}$ is the adjustment factor accounting for bandwidth overlap between the GSO and LEO signals, with a value between 0 and 1.
+
+The downlink carrier-to-noise ratio (CNR) of the GSO satellite signal received by the GGS is calculated as:
+$$
+\text{CNR} = \frac{C }{k_{\text{boltz}}TB}
+$$
+where $k_{\text{boltz}}$ is the Boltzmann constant, $T$ is the receiver noise temperature., and $B$ is the bandwidth of the GSO baseband signal.
+
+Similarly,  the interference-to-noise ratio (INR) received from the $k$th LEO satellite is:
+$$
+\text{INR}_k = \frac{I_k }{k_{\text{boltz}}TB}
+$$
+
+To evaluate the effect of interference from all LEO satellites, we use the carrier-to-interference-plus-noise ratio (CINR):
+$$
+\text{CINR } = \frac{C }{\sum_{k=1}^{K }I_k + k_{\text{boltz}}TB}
+$$
+where $K$ is the total number of interfering LEO satellites at a given time.
+
+\subsection{Received Signal Model}
+
+The total received signal at the GGS is the sum of the desired signal, interference from all LEO satellites, and additive white Gaussian noise (AWGN):
+
+$$
+y(t ) = x(t ) \sqrt{\text{CNR }} + \sum_{k=1}^{K } \left(i_{k}(t )e^{j 2 \pi (f_{\text{c, k}}- f_{\text{c, gso}})t} \sqrt{\text{INR }_{k}}\right) + \zeta(t)
+$$
+where $x(t)$ is the baseband signal trasmitted by GSO satellite, $i_{k}(t)$ is the interfering signals from the $k$th LEO satellite.
+At give time t, there are $K$ interfering LEO satellites, the carrier frequencies of the $k $th LEO satellite and the GSO satellite are $f_{\text{c, k}}$ and $f_{\text{c, gso}}$ respectively. The exponential term accounts for the frequency difference .
+
+For further analysis and potential machine learning applications, the received signal can be represented in both time and frequency domains:
+\begin{enumerate}
+    \item Time-domain representation: The amplitude of $y(t)$ is sampled to create a one dimensional sequence $y^{A}$.
+    \item Frequency-Domain Representation: The power spectral density (PSD) of $y(t)$ is estimated using Welch's method, which divides the signal into overlapping segments and computes the periodogram of each segment, resulting in one dimensional $y^{F } = 10 \log_{10}(\phi(y(t )))$
+\end{enumerate}
+
+\section{Proposed Deep Learning Models}
+
+This section presents a novel framework for multi-modal interference detection in satellite communication, leveraging both time domain and frequency domain data. Three classes of deep learning models are proposed: Autoencoders(AE), Variational Autoencoders(VAE), and Conditional Variational Autoencoders(CVAE). Each class is implemented with three architectural variants: linear, convolutional and transformer based, to explore the impact of feature extraction mechanisms. The core innovation lies in fusing time and frequency information to anomaly detection robustness.
+
+Next, we seek to define a reliable reconstruction error threshold. This threshold will then be applied to signals, regardless of interference. If the detected error values surpass this set threshold, interference is identified.
+
+We denote the time and frequency domain signal input as $S_{t}$ and $S_f$. Before being fed into the model, each input undergoes elementwise normalization, scaling values between 0 and 1 using the minimum and maximum values from the relevant training dataset. The reconstructed output is denoted as $\hat{S}_{t}$ and $\hat{S}_{f}$.
+
+\begin{enumerate}
+    \item Linear: \todo{How Linear works}
+    \item CNN: The CNN based class takes in a one-dimensional signal and processes it through a series of convolutional layers. The first convolutional layer extracts local temporal patterns, expanding the feature space from a single channel to 16 channels. A ReLU activation introduces non-linearity, helping the model capture complex relationships in the data. After this, a max pooling layer reduces the dimensionality, improving computational efficiency while retaining essential features. The second group increases channel number to 32. The output is then flattened to a two dimensional tensor of shape [B, E]. The frequency-domain encoder follows an identical architecture. The decoder reverses the encoding process to reconstruct the original signals from the fused latent representation. Two transposed convolution layers progressively upsample the features, restoring the signal's original resolution. ReLU activations ensure non-linearity, aiding reconstruction. The final output is the recovered time-domain signal and frequency-domain spectrum.
+    \item Transformer: \todo{How transformer works}
+\end{enumerate}
+
+
+The AE class is a fundamental deep learning model that learns a compressed representation of the input data. The AE consists of an encoder and a decoder, which are trained to minimize the reconstruction error between the input and output.  First a dual branch is used to map $S_t$ and $S_f$ to a latent dimension $E$. Then these latent representations are concatenated and have a dimension of $2E$. An MLP layer is then applied to map the fused vector into dimension $E$, which is the shared bottleneck of both time and frequency domain data's latent space. Finally, two domain specific decoders are used to reconstruct the time and frequency domain signals. In the case of linear autoencoder where we also drop the non-linear operations, the autoencoder would achieve the same latent representation as Principal Component Analysis (PCA). The architecture is shown in \autoref{fig:ae-class}.
+
+To model the reconstruction error, we use the mean squared error (MSE) loss function:
+$$
+L_{\text{AE}} = \frac{1}{N} \sum_{i=1}^{N} \left( \left\| S_{t}^{(i)} - \hat{S}_{t}^{(i)} \right\|_{2}^{2} + \left\| S_{f}^{(i)} - \hat{S}_{f}^{(i)} \right\|_{2}^{2} \right)
+$$
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{dummy.png}
+    \caption{Autoencoder(AE) class}
+    \label{fig:ae-class}
+\end{figure}
+
+The Variational Autoencoder (VAE) extends traditional autoencoders by introducing a probabilistic framework to model the latent space. Unlike deterministic autoencoders, VAEs learn a generative model of the data by approximating the true posterior distribution of latent variables $z$ given the input $x$. This is achieved via an encoder-decoder architecture governed by parameters $\phi$(encoder) and $\theta$ (decoder), as shown in \autoref{fig:vae-class}.
+
+The objective is to maximize the evidence lower bound : 
+$$
+\text{ELBO}(\theta,\phi;x) = \mathbb{E}_{q_{\phi}(z|x)} \left[ \log p_{\theta}(x|z) \right] -  D_{\text{KL}} \left( q_{\phi}(z|x) || p(z) \right)
+$$
+
+Our VAE implementation extends this framework to fuse time-domain $S_t  $ and frequency domain $S_f$ signals. Two domain specific encoders process $S_t$ and $S_f$, produce $h_t$ and $h_f$. Features are concatenated and mapped to latent parameters:
+$$
+\mu = f_{\mu}(h_t , h_f) \quad \sigma = f_{\sigma}(h_t , h_f)
+$$
+
+The latent vector $z$ is sampled as $z = \mu + \sigma \cdot \epsilon$, where $\epsilon \sim \mathcal{N}(0, I)$ to enable backpropagation. The decoder then reconstructs the input signals from the latent representation. The loss combines reconstruction loss and KL divergence :
+
+$$
+L_{\text{VAE}} = \text{MSE}(S_t, \hat{S_t})+ \text{MSE}(S_f, \hat{S_f}) - \beta \cdot \frac{1}{2} \sum_{i=1}^{d }(1 + \log \sigma_{i}^{2} - \mu_i^{2} - \sigma_i^{2})
+$$
+
+The hyperparameter $\beta$ inspired by \todo{Inspired by what } encourages disentangled representations by amplifying the KL term’s regularization effect.
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{dummy.png}
+    \caption{Variational Autoencoder(AE) class}
+    \label{fig:vae-class}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\textwidth]{dummy.png}
+    \caption{Conditional Autoencoder(AE) class}
+    \label{fig:cvae-class}
+\end{figure}
+
+\end{document}
