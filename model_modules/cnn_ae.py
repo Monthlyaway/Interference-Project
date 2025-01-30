@@ -5,9 +5,10 @@ import lightning as L
 from torch.utils.data import DataLoader, TensorDataset
 from torchinfo import summary
 import torch.nn.functional as F
+from .abstract import AE
 
 
-class CNNAutoencoder(L.LightningModule):
+class CNNAutoencoder(L.LightningModule, AE):
     def __init__(self, input_length=800, latent_dim=128, learning_rate=1e-3):
         super(CNNAutoencoder, self).__init__()
         self.save_hyperparameters()
@@ -92,7 +93,8 @@ class CNNAutoencoder(L.LightningModule):
     def training_step(self, batch, batch_idx):
         signal, spectrum = batch['signal'], batch['spectrum']
         recon_signal, recon_spectrum = self(signal, spectrum)
-        loss = self.loss_function(recon_signal, signal, recon_spectrum, spectrum)
+        loss = self.loss_function(
+            recon_signal, signal, recon_spectrum, spectrum)
         self.log("train/loss", loss, prog_bar=True,
                  on_step=False, on_epoch=True)
         return loss
@@ -100,7 +102,8 @@ class CNNAutoencoder(L.LightningModule):
     def validation_step(self, batch, batch_idx):
         signal, spectrum = batch['signal'], batch['spectrum']
         recon_signal, recon_spectrum = self(signal, spectrum)
-        loss = self.loss_function(recon_signal, signal, recon_spectrum, spectrum)
+        loss = self.loss_function(
+            recon_signal, signal, recon_spectrum, spectrum)
         self.log("val/loss", loss, prog_bar=True,
                  on_step=False, on_epoch=True)
         return loss
