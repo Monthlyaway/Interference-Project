@@ -2,92 +2,104 @@ import lightning as L
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-import numpy as np
-import scipy
-from torch.optim import Adam
-from einops import rearrange, reduce
-
-# Batch first is always set to True
+from .abstract import VAE
+import math
+import torch.optim as optim
+from torchinfo import summary
 
 
-class TransformerVAE(L.LightningModule):
-    """Assume signal and spectrum have shape: [B, 1, 800].
-    This is batch first notation, batch, sequence length, and number of channels."""
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=5000):
+        super().__init__()
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(
+            0, d_model, 2).float() * (-math.log(10000.0)/d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe.unsqueeze(0))
 
-    def __init__(self, seq_len=800, latent_dim=64, lr=1e-3, alpha=1.0, num_layers=2, nhead=4):
+    def forward(self, x):
+        x = x + self.pe[:, :x.size(1), :]
+        return x
+
+
+class TransformerVAE(L.LightningModule, VAE):
+    def __init__(self, seq_len=800, latent_dim=128, lr=1e-3, alpha=1.0):
         super().__init__()
         self.save_hyperparameters()
+        assert latent_dim % 2 == 0, "Latent dimension must be even."
 
-        # Project to latent space
-        self.signal_in_proj = nn.Linear(1, latent_dim)
-        self.spectrum_in_proj = nn.Linear(1, latent_dim)
-
-        self.signal_encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(
-                d_model=latent_dim, nhead=nhead),
-            num_layers=num_layers
+        self.signal_conv = nn.Sequential(
+            nn.Conv1d(1, 32, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool1d(2),
+            nn.Conv1d(32, latent_dim // 2, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool1d(2),  # [B, 64, 200]
         )
 
-        self.spectrum_encoder = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(
-                d_model=latent_dim, nhead=nhead),
-            num_layers=num_layers
+        self.spectrum_conv = nn.Sequential(
+            nn.Conv1d(1, 32, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool1d(2),
+            nn.Conv1d(32, latent_dim // 2, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool1d(2),  # [B, 64, 200]
         )
 
-        self.latent_proj = nn.Sequential(
-            nn.Linear(latent_dim * 2, latent_dim), nn.GELU())
-        self.fc_mu = nn.Linear(latent_dim, latent_dim)
-        self.fc_logvar = nn.Linear(latent_dim, latent_dim)
+        self.pos_encoder = PositionalEncoding(latent_dim)
 
-        # self.signal_decoder = nn.TransformerDecoder(
-        #     nn.TransformerDecoderLayer(
-        #         d_model=latent_dim, num_heads=num_heads),
-        #     num_layers=num_layers
-        # )
-
-        # self.spectrum_decoder = nn.TransformerDecoder(
-        #     nn.TransformerDecoderLayer(
-        #         d_model=latent_dim, num_heads=num_heads),
-        #     num_layers=num_layers
-        # )
-
-        self.signal_out_proj = nn.Sequential(
-            nn.Linear(latent_dim, seq_len // 2),
-            nn.GELU(),
-            nn.Linear(seq_len // 2, seq_len)
+        self.transformer_encoder = nn.TransformerEncoder(
+            encoder_layer=nn.TransformerEncoderLayer(
+                d_model=latent_dim,
+                nhead=2,
+                dim_feedforward=512,
+                dropout=0.1,
+            ),
+            num_layers=2,
         )
-        self.spectrum_out_proj = nn.Sequential(
-            nn.Linear(latent_dim, seq_len // 2),
-            nn.GELU(),
-            nn.Linear(seq_len // 2, seq_len)
+
+        self.signal_decoder = nn.Sequential(
+            nn.ConvTranspose1d(latent_dim // 2, 32, kernel_size=2, stride=2),
+            nn.ReLU(),
+            nn.ConvTranspose1d(32, 1, kernel_size=2, stride=2),  # [B, 1, 800]
+        )
+
+        self.spectrum_decoder = nn.Sequential(
+            nn.ConvTranspose1d(latent_dim // 2, 32, kernel_size=2, stride=2),
+            nn.ReLU(),
+            nn.ConvTranspose1d(32, 1, kernel_size=2, stride=2),  # [B, 1, 800]
+        )
+
+        self.fc = nn.Sequential(
+            nn.Linear(latent_dim * (seq_len // 4), latent_dim),
+            nn.ReLU(),
+        )
+        self.fc_mu = nn.Sequential(
+            nn.Linear(latent_dim, latent_dim),
+            nn.ReLU(),
+        )
+        self.fc_logvar = nn.Sequential(
+            nn.Linear(latent_dim, latent_dim),
+            nn.ReLU(),
+        )
+        self.decoder_fc = nn.Sequential(
+            nn.Linear(latent_dim, latent_dim * (seq_len // 4)),
         )
 
     def encode(self, signal, spectrum):
-        signal = rearrange(signal, 'b c s -> s b c')
-        spectrum = rearrange(spectrum, 'b c s -> s b c')
+        signal = self.signal_conv(signal)
+        spectrum = self.spectrum_conv(spectrum)
 
-        # Project to latent space
-        signal = self.signal_in_proj(signal)
-        spectrum = self.spectrum_in_proj(spectrum)
-
-        # Transformer encoder
-        signal_encoded = self.signal_encoder(signal)
-        spectrum_encoded = self.spectrum_encoder(spectrum)
-        # print(f"After transformer encoder, {signal_encoded.shape=}, {
-        #       spectrum_encoded.shape=}")  # [800, B, E]
-
-        # Reduce the dimension of Length(800) to 1
-        signal_encoded = reduce(signal_encoded, 's b e -> b e', 'mean')
-        spectrum_encoded = reduce(spectrum_encoded, 's b e -> b e', 'mean')
-
-        # Concatenate the two latent spaces
-        latent = torch.cat([signal_encoded, spectrum_encoded], dim=-1)
-        latent = self.latent_proj(latent)
-
+        fused = torch.cat([signal, spectrum], dim=1)  # [B, latent_dim, 200]
+        fused = fused.permute(2, 0, 1)  # [200, B, latent_dim]
+        fused = self.pos_encoder(fused)
+        fused = self.transformer_encoder(fused)
+        fused = fused.reshape(fused.size(1), -1)  # [B, latent_dim * 200]
+        latent = self.fc(fused)
         mu = self.fc_mu(latent)
         logvar = self.fc_logvar(latent)
-
-        # latent is used in decoder transformer to recontruct
         return mu, logvar
 
     def reparameterize(self, mu, logvar):
@@ -96,14 +108,23 @@ class TransformerVAE(L.LightningModule):
         return mu + eps * std
 
     def decode(self, z):
-        signal = self.signal_out_proj(z)
-        spectrum = self.spectrum_out_proj(z)
-        return signal, spectrum
+        # z shape: [B, latent_dim]
+        decoded = self.decoder_fc(z)
+        decoded = decoded.view(decoded.size(0), -1, 200)
+
+        signal_enc, spectrum_enc = torch.chunk(decoded, 2, dim=1)
+        signal_recon = self.signal_decoder(signal_enc)  # [B, 1, 800]
+        spectrum_recon = self.spectrum_decoder(spectrum_enc)  # [B, 1, 800]
+        return signal_recon, spectrum_recon
+
+    def forward(self, signal, spectrum):
+        mu, logvar = self.encode(signal, spectrum)
+        z = self.reparameterize(mu, logvar)
+        signal_recon, spectrum_recon = self.decode(z)
+        return signal_recon, spectrum_recon, mu, logvar
 
     def train_loss(self, recon_signal, recon_spectrum, signal, spectrum, mu, logvar):
         # Reconstruction loss
-        recon_signal = recon_signal.unsqueeze(1)
-        recon_spectrum = recon_spectrum.unsqueeze(1)
         loss_signal = F.mse_loss(recon_signal, signal, reduction='mean')
         loss_spectrum = F.mse_loss(recon_spectrum, spectrum, reduction='mean')
 
@@ -113,19 +134,11 @@ class TransformerVAE(L.LightningModule):
         alpha = self.hparams.alpha
         return loss_signal + loss_spectrum + alpha * kl_div, loss_signal, loss_spectrum, kl_div
 
-    def forward(self, signal, spectrum):
-        mu, logvar = self.encode(
-            signal, spectrum)
-        z = self.reparameterize(mu, logvar)
-        recon_signal, recon_spectrum = self.decode(z)
-        return recon_signal, recon_spectrum, mu, logvar
-
     def training_step(self, batch, batch_idx):
-        signal = batch['signal']
-        spectrum = batch['spectrum']
+        signal, spectrum = batch['signal'], batch['spectrum']
         recon_signal, recon_spectrum, mu, logvar = self(signal, spectrum)
-        total_loss, loss_signal, loss_spectrum, kl_div = self.train_loss(
-            recon_signal, recon_spectrum, signal, spectrum, mu, logvar)
+        total_loss, loss_signal, loss_spectrum, kl_div = self.train_loss(recon_signal, recon_spectrum,
+                                                                         signal, spectrum, mu, logvar)
         self.log_dict(
             {
                 'train/total_loss': total_loss,
@@ -153,4 +166,9 @@ class TransformerVAE(L.LightningModule):
         return total_loss
 
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=self.hparams.lr)
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
+
+if __name__ == '__main__':
+    model = TransformerVAE()
+    summary(model, input_size=[(56, 1, 800), (56, 1, 800)])

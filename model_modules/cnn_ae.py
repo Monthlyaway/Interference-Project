@@ -8,9 +8,9 @@ import torch.nn.functional as F
 from .abstract import AE
 
 
-class CNNAutoencoder(L.LightningModule, AE):
+class CNNAE(L.LightningModule, AE):
     def __init__(self, input_length=800, latent_dim=128, learning_rate=1e-3):
-        super(CNNAutoencoder, self).__init__()
+        super(CNNAE, self).__init__()
         self.save_hyperparameters()
         self.learning_rate = learning_rate
 
@@ -85,7 +85,7 @@ class CNNAutoencoder(L.LightningModule, AE):
 
         return recon_signal, recon_spectrum
 
-    def loss_function(self, recon_signal, signal, recon_spectrum, spectrum):
+    def train_loss(self, recon_signal, signal, recon_spectrum, spectrum):
         loss = F.mse_loss(recon_signal, signal, reduction="mean") + \
             F.mse_loss(recon_spectrum, spectrum, reduction="mean")
         return loss
@@ -93,7 +93,7 @@ class CNNAutoencoder(L.LightningModule, AE):
     def training_step(self, batch, batch_idx):
         signal, spectrum = batch['signal'], batch['spectrum']
         recon_signal, recon_spectrum = self(signal, spectrum)
-        loss = self.loss_function(
+        loss = self.train_loss(
             recon_signal, signal, recon_spectrum, spectrum)
         self.log("train/loss", loss, prog_bar=True,
                  on_step=False, on_epoch=True)
@@ -102,7 +102,7 @@ class CNNAutoencoder(L.LightningModule, AE):
     def validation_step(self, batch, batch_idx):
         signal, spectrum = batch['signal'], batch['spectrum']
         recon_signal, recon_spectrum = self(signal, spectrum)
-        loss = self.loss_function(
+        loss = self.train_loss(
             recon_signal, signal, recon_spectrum, spectrum)
         self.log("val/loss", loss, prog_bar=True,
                  on_step=False, on_epoch=True)
@@ -113,5 +113,5 @@ class CNNAutoencoder(L.LightningModule, AE):
 
 
 if __name__ == '__main__':
-    model = CNNAutoencoder()
+    model = CNNAE()
     summary(model, input_size=[(56, 1, 800), (56, 1, 800)])

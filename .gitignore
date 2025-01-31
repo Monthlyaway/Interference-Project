@@ -179,3 +179,5 @@ cython_debug/
 wandb/
 *.pth
 doc/v1.synctex.gz
+simple_vae.ipynb
+cvae.ipynb

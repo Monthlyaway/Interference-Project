@@ -15,22 +15,25 @@ def main(args):
     data_module = BaseDataModule(batch_size=args.batch_size)
     data_module.prepare_data()
 
-    # model = LinearVAE(
-    #     seq_len=800,
-    #     latent_dim=args.latent_dim,
-    #     lr=args.lr,
-    #     alpha=args.alpha
-    # )
+    model = LinearVAE(
+        seq_len=800,
+        latent_dim=args.latent_dim,
+        lr=args.lr,
+        alpha=args.alpha
+    )
 
     # model = CNNAutoencoder(800, args.latent_dim, args.lr)
-    model = CNNVAE(800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
+    # model = CNNVAE(800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
+    # model = TransformerAE(800, latent_dim=args.latent_dim, lr=args.lr)
+    # model = TransformerVAE(800, latent_dim=args.latent_dim,
+                        #    lr=args.lr, alpha=args.alpha)
 
     # model = TransformerVAE(
     #     seq_len=800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val/total_loss',
-        filename='cnn_vae_epoch={epoch}-step={step}-val_acc={val/total_loss:.2f}',
+        filename='linear_vae_epoch={epoch}-step={step}-val_loss={val/total_loss:.2f}',
         auto_insert_metric_name=False,
         save_top_k=2,
         mode='min'
@@ -44,7 +47,7 @@ def main(args):
         callbacks=[checkpoint_callback],
         logger=wandb_logger,
         accumulate_grad_batches=2,
-        fast_dev_run=True,
+        fast_dev_run=False,
     )
     print('Starting training')
     trainer.fit(model, data_module)

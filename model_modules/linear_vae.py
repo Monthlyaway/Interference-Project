@@ -5,9 +5,10 @@ import torch.nn.functional as F
 import numpy as np
 import scipy
 from torch.optim import Adam
+from .abstract import VAE
 
 
-class LinearVAE(L.LightningModule):
+class LinearVAE(L.LightningModule, VAE):
     """Need input signal to have shape: [B, seq_len]"""
 
     def __init__(self, seq_len=800, latent_dim=64, lr=1e-3, alpha=1.0):
