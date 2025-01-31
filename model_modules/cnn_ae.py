@@ -9,10 +9,10 @@ from .abstract import AE
 
 
 class CNNAE(L.LightningModule, AE):
-    def __init__(self, input_length=800, latent_dim=128, learning_rate=1e-3):
+    def __init__(self, input_length=800, latent_dim=128, lr=1e-3):
         super(CNNAE, self).__init__()
         self.save_hyperparameters()
-        self.learning_rate = learning_rate
+        self.learning_rate = lr
 
         # Time-Domain Encoder
         self.signal_encoder = nn.Sequential(
@@ -109,7 +109,7 @@ class CNNAE(L.LightningModule, AE):
         return loss
 
     def configure_optimizers(self):
-        return optim.Adam(self.parameters(), lr=self.learning_rate)
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
 
 
 if __name__ == '__main__':

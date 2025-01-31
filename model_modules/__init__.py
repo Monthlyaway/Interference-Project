@@ -5,3 +5,4 @@ from .cnn_vae import CNNVAE
 from .transformer_ae import TransformerAE
 from .abstract import *
 from .transformer_vae import TransformerVAE
+from .linear_ae import LinearAE
