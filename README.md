@@ -3,3 +3,4 @@
 3. `LightningModule` defined in folder: `model_modules`
 4. `Trainer` defined in file `train.py`
 5. Test script in notebook: `test.ipynb`
+6. Paper draft in folder: `doc`
