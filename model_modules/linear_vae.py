@@ -135,3 +135,9 @@ class LinearVAE(L.LightningModule, VAE):
 
     def configure_optimizers(self):
         return Adam(self.parameters(), lr=self.hparams.lr)
+
+if __name__ == "__main__":
+    from torchviz import make_dot
+    model = LinearVAE()
+    graph = make_dot(model(torch.randn(64, 1, 800), torch.randn(64, 1, 800)), params=dict(model.named_parameters()))
+    graph.render("linear_vae", format="png", cleanup=True)

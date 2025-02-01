@@ -24,18 +24,18 @@ def main(args):
 
     # model = CNNAutoencoder(800, args.latent_dim, args.lr)
     # model = CNNVAE(800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
-    # model = TransformerAE(800, latent_dim=args.latent_dim, lr=args.lr)
+    model = TransformerAE(800, latent_dim=args.latent_dim, lr=args.lr)
     # model = TransformerVAE(800, latent_dim=args.latent_dim,
     #    lr=args.lr, alpha=args.alpha)
     # model = LinearAE(800, latent_dim=args.latent_dim, lr=args.lr)
-    model = CNNAE(800, latent_dim=args.latent_dim, lr=args.lr)
+    # model = CNNAE(800, latent_dim=args.latent_dim, lr=args.lr)
 
     # model = TransformerVAE(
     #     seq_len=800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val/loss',
-        filename='cnn_ae_epoch={epoch}-step={step}-val_loss={val/loss:.2f}',
+        filename='transformer_ae_epoch={epoch}-step={step}-val_loss={val/loss:.2f}',
         auto_insert_metric_name=False,
         save_top_k=2,
         mode='min'

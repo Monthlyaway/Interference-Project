@@ -54,7 +54,7 @@ class TransformerAE(L.LightningModule, AE):
         self.transformer_encoder = nn.TransformerEncoder(
             encoder_layer=nn.TransformerEncoderLayer(
                 d_model=latent_dim,
-                nhead=2,
+                nhead=4,
                 dim_feedforward=512,
                 dropout=0.1,
             ),
