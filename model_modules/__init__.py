@@ -6,3 +6,4 @@ from .transformer_ae import TransformerAE
 from .abstract import *
 from .transformer_vae import TransformerVAE
 from .linear_ae import LinearAE
+from .cnn_ae_attention import CNNAEAttention

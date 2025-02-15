@@ -12,8 +12,8 @@ def load_mat_data(file_path, data_key_contains='Data'):
     for key in data:
         if data_key_contains in key:
             return data[key]
-    raise ValueError(f"Data variable containing '{
-                     data_key_contains}' not found in {file_path}.")
+    raise ValueError(
+        f"Data variable containing '{data_key_contains}' not found in {file_path}.")
 
 
 def load_mat_labels(file_path, label_key_contains='Labels'):
@@ -22,8 +22,8 @@ def load_mat_labels(file_path, label_key_contains='Labels'):
     for key in data:
         if label_key_contains in key:
             return data[key].flatten()
-    raise ValueError(f"Label variable containing '{
-                     label_key_contains}' not found in {file_path}.")
+    raise ValueError(
+        f"Label variable containing '{label_key_contains}' not found in {file_path}.")
 
 
 class TimeFrequencyDataset(Dataset):
