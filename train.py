@@ -32,11 +32,12 @@ def main(args):
 
     # model = TransformerVAE(
     #     seq_len=800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
-    model = CNNAEAttention(latent_dim=args.latent_dim, lr=args.lr)
+    # model = CNNAEAttention(latent_dim=args.latent_dim, lr=args.lr)
+    model = CDMA_Net(lr=args.lr)
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val/loss',
-        filename='cnn_ae_att_epoch={epoch}-step={step}-val_loss={val/loss:.2f}',
+        filename='cdma_epoch={epoch}-step={step}-val_loss={val/loss:.2f}',
         auto_insert_metric_name=False,
         save_top_k=2,
         mode='min'
@@ -59,10 +60,10 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--latent_dim", type=int, default=64)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--latent_dim", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--epochs", type=int, default=5)
+    parser.add_argument("--epochs", type=int, default=-1)
     parser.add_argument("--alpha", type=float, default=1.0)
 
     main(parser.parse_args())

@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 from torchinfo import summary
-
+from .abstract import AE
 
 class CrossDomainAttention(nn.Module):
     """Process encoded features with spectral-temporal attention"""
@@ -54,7 +54,7 @@ class CNNEncoder(nn.Module):
         return self.net(x)  # [B, 64, 200]
 
 
-class CNNAEAttention(L.LightningModule):
+class CNNAEAttention(L.LightningModule, AE):
     def __init__(self, input_size=800, latent_dim=128, lr=1e-3):
         super().__init__()
         self.save_hyperparameters()

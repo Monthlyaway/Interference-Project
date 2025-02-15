@@ -127,8 +127,8 @@ if __name__ == '__main__':
     dm.prepare_data()
     dm.setup('fit')
     train_loader = dm.train_dataloader()
-    print(next(iter(train_loader))['signal'])
-    print(next(iter(train_loader))['spectrum'])
+    print(next(iter(train_loader))['signal'].shape)
+    print(next(iter(train_loader))['spectrum'].shape)
 
     dm.setup('test')
     test_loader = dm.test_dataloader()

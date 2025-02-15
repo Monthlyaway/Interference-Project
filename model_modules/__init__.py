@@ -7,3 +7,4 @@ from .abstract import *
 from .transformer_vae import TransformerVAE
 from .linear_ae import LinearAE
 from .cnn_ae_attention import CNNAEAttention
+from .cdma import CDMA_Net
