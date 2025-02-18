@@ -8,6 +8,11 @@
 \usepackage{multirow}
 \usepackage{booktabs}   
 \usepackage{adjustbox}
+\usepackage[
+backend=biber,
+style=alphabetic,
+]{biblatex}
+\addbibresource{references.bib}
 
 % Define red alert TODO
 \newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
@@ -20,6 +25,10 @@
 \maketitle
 
 \section{Introduction}
+
+The rapid proliferation of non-geostationary orbit (NGSO) satellite constellations, driven by advancements in low-cost launch technologies and the demand for global broadband connectivity, has intensified the risk of co-frequency interference with geostationary orbit (GSO) systems. For instance, large-scale NGSO constellations like Starlink and OneWeb share overlapping frequency bands with critical GSO services such as fixed-satellite (FSS) and broadcasting-satellite (BSS) systems, creating unprecedented challenges in spectrum coexistence. The International Telecommunication Union (ITU) underscores the urgency of interference mitigation in Radio Regulation, which mandates that NGSO systems "shall not cause unacceptable interference to geostationary-satellite networks" while imposing stringent limits on equivalent power flux density (EPFD) and off-axis emissions. These regulations aim to protect GSO operations, such as weather monitoring and telecommunications, which underpin vital global infrastructure.
+
+
 
 \section{System Model}
 
@@ -138,6 +147,35 @@ The hyperparameter $\beta$ inspired by \todo{Inspired by what } encourages disen
 
 \section{Experiment Results}
 
+\subsection{Data Preprocessing \& Dataset Configuration}
+
+Our experiments leverage the satellite interference dataset from Saif Al-Dawla et al. \cite{saifaldawlaNGSOToGSOSatelliteInterference2023}, comprising 17,281 time-domain magnitude sequences captured from Geostationary (GSO) and Low-Earth Orbit (LEO) satellite links. Table 1 details the dataset splits adhering to the original paper's rigorous simulation setup:
+
+\begin{table}[htbp]
+\centering
+\caption{Dataset Composition and Splits \cite{saifaldawlaNGSOToGSOSatelliteInterference2023}}
+\label{tab:dataset}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Split} & \textbf{Total Samples} & \textbf{Clean (Class 0)} & \textbf{Interference (Class 1)} & \textbf{SNR Range (dB)} \\
+\midrule
+Train          & 11,509                 & 11,509                   & 0                                & 6.4--15.4               \\
+Validation     & 1,302                  & 1,302                    & 0                                & 6.4--15.4               \\
+Test           & 4,470                  & 2,235                    & 2,235                            & 4.5--32.5               \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Each sample consists of an 800-dimensional time-series magnitude vector derived from DVB-S2X standard transmissions at 100 MHz sampling rate. We preprocess the data as follows:
+
+Normalization: To mitigate amplitude variations from satellite link adaptation, we apply instance-wise standardization:
+
+\begin{align*}
+\hat{x}i = \frac{x_i - \mu}{\sigma} \\
+\mu = \frac{1}{800}\sum{k=1}^{800} x_k \\
+\sigma = \sqrt{\frac{1}{800}\sum_{k=1}^{800} (x_k - \mu)^2}
+\end{align*}
+
 \subsection{Models evaluation results}
 
 The proposed framework is rigorously evaluated against a conventional Energy Detection (ED) baseline, which computes the energy threshold $\beta_E$ by optimizing the AUC score on the test dataset. For a received signal $\mathbf{y}_n$, the energy $E_n = \sum_{i=1}^N |y_n[i]|^2$ is compared to $\beta_E$ to detect interference. The ED method achieves 71.67\% accuracy and 0.7167 AUC, with perfect precision (100.0\%) but critically low recall (43.35\%), reflecting its propensity for false negatives under non-Gaussian noise conditions.
@@ -203,5 +241,8 @@ Transformer-based models, despite their theoretical allure, fall short in this c
     
 \end{figure}
 
+\medskip
+
+\printbibliography
 
 \end{document}
