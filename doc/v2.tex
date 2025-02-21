@@ -147,7 +147,7 @@ where $\mathcal{W}(\cdot)$ denotes the multi-scale wavelet transform operator ma
 
 
 
-\begin{figure}[t]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.5\linewidth]{wavelet-scales.pdf}
     \caption{Morlet-style wavelet kernels at different scales (\autoref{eq:wavelet_def}). Narrower windows (left) resolve high-frequency components while wider kernels (right) capture low-frequency structures.}
@@ -175,6 +175,14 @@ The simulation accounts for adaptive coding/modulation through time-varying link
 
 \subsection{Evaluation Results}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.5\linewidth]{roc-comparison.pdf} 
+    \caption{ROC curves for DualAttnNet and baseline models. DualAttnNet achieves the highest AUC score.}
+    \label{fig:roc_comparison}
+\end{figure}
+
+
 \begin{table}[htbp]
     \caption{Performance Comparison of DualAttnNet Against Baseline Models}
     \label{tab:main_results}
@@ -201,13 +209,13 @@ The simulation accounts for adaptive coding/modulation through time-varying link
     \centering
     \begin{tabular}{lccc}
         \toprule
-        \textbf{Model Variant} & \textbf{Accuracy (\%)} $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC} $\uparrow$        \\
+        \textbf{Model Variant} & \textbf{Accuracy (\%)} $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC} $\uparrow$ \\
         \midrule
-        DualAttnNet (Full)     & 0.00                              & 0.00                         & 0.00                           \\
+        DualAttnNet (Full)     & 0.8210                            & 0.8192                       & 0.9334                  \\
         \cmidrule{1-4}
-        w/o Mutual Attention   & 0.00                              & 0.00                         & 0.00                           \\
-        w/o Wavelet Loss       & 0.00                              & 0.00                         & 0.00                           \\
-        Vanilla Implementation & 0.00                              & 0.00                         & 0.00                           \\
+        w/o Mutual Attention   & 0.8289                            & 0.8288                       & 0.9294                  \\
+        w/o Wavelet Loss       & 0.8273                            & 0.8273                       & 0.9283                  \\
+        Vanilla Implementation & 0.7995                            & 0.7975                       & 0.9175                  \\
         \bottomrule
     \end{tabular}
     \vspace{2pt}
