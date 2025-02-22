@@ -119,11 +119,11 @@ Query, key and value matrices are reused across domains to reduce model complexi
 Our proposed architecture introduces a frequency-aware objective function through wavelet-domain regularization. The composite loss function consists of two complementary components:
 
 \begin{equation}
-    \mathcal{L}_{\text{total}} = \mathcal{L}_{\text{MSE}} + \lambda\mathcal{L}_{\text{Wavelet}}
+    \mathcal{L}_{\text{total}} = \mathcal{L}_{\text{MSE}} + \mathcal{L}_{\text{Wavelet}}
     \label{eq:combined_loss}
 \end{equation}
 
-where $\mathcal{L}_{\text{MSE}}$ denotes the conventional mean squared error in the time domain, and $\mathcal{L}_{\text{Wavelet}}$ represents our spectral regularization term weighted by $\lambda=0.5$.
+where $\mathcal{L}_{\text{MSE}}$ denotes the conventional mean squared error in the time domain, and $\mathcal{L}_{\text{Wavelet}}$ represents our spectral regularization term.
 
 
 The wavelet transformation employs preset scale factors $\mathbf{S} = [s_1, s_2, ..., s_n]$ to generate analytic filters spanning distinct frequency bands. Each wavelet kernel $\psi_s(t)$ follows the modulated Gaussian form:
@@ -175,50 +175,60 @@ The simulation accounts for adaptive coding/modulation through time-varying link
 
 \subsection{Evaluation Results}
 
+DualAttWaveNet achieves state-of-the-art interference detection performance, as quantified across multiple metrics. With an AUC of \textbf{0.9327} (\autoref{fig:roc_comparison}), it outperforms ConvAE (0.9175), ConvAE+Attention (0.8719), and TransAE (0.6812), demonstrating superior separability between clean and corrupted signals. At 10\% FPR, its TPR of 92.1\% exceeds ConvAE and ConvAE+Attention by 1.8\% and 7.4\% respectively, reflecting enhanced discrimination in low-signal-to-noise regimes. \autoref{fig:confusion_matrix} evaluates detection performance using a threshold set to the validation set mean plus one standard deviation.
+
+The inferior performance of baselines highlights limitations in naive time-frequency feature fusion. While ConvAE+Attention adds self-attention to concatenated embeddings, its AUC drops 4.56\% relative to ConvAE, suggesting attention alone cannot resolve cross-domain misalignments. TransAE’s low AUC (0.6812) confirms that transformer-based architectures is hard to converge in this task.
+
+
+
+These improvements stem from DualAttWaveNet’s wavelet-constrained reconstruction loss, which enforces joint time-frequency fidelity. By preserving high-frequency interference artifacts during training, the model avoids oversmoothing distortions that baseline architectures erroneously suppress. The consistency between elevated AUC and confusion matrix metrics confirms the robustness of this approach.
+
+\begin{table}[t]
+    \caption{Performance Comparison of DualAttnWaveNet Against Baseline Models}
+    \label{tab:main_results}
+    \centering
+    \begin{tabular}{lcccc}
+        \toprule
+        \textbf{Model}  & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{FLOPS (G)}$\downarrow$ \\
+        \midrule
+        DualAttnWaveNet & 0.8367                             & 0.8366                       & 0.9327                 & 0.00                           \\
+        \cmidrule{1-5}
+        LinearAE        & 0.7987                             & 0.7966                       & 0.9176                 & 0.00                           \\
+        CNNAE           & 0.7996                             & 0.7975                       & 0.9175                 & 0.00                           \\
+        Transformer AE  & 0.5678                             & 0.5634                       & 0.6812                 & 0.00                           \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.5\linewidth]{roc-comparison.pdf} 
-    \caption{ROC curves for DualAttnNet and baseline models. DualAttnNet achieves the highest AUC score.}
+    \includegraphics[width=0.5\linewidth]{roc-comparison.pdf}
+    \caption{ROC curves for DualAttnWaveNet and baseline models. DualAttnWaveNet achieves the highest AUC score.}
     \label{fig:roc_comparison}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\linewidth]{confusion.pdf} 
-    \caption{Confusion matrix for DualAttnNet and baselines on the test set}
+    \includegraphics[width=0.9\linewidth]{confusion.pdf}
+    \caption{Confusion matrix for DualAttnWaveNet and baselines on the test set}
     \label{fig:confusion_matrix}
 \end{figure}
 
 
-\begin{table}[htbp]
-    \caption{Performance Comparison of DualAttnNet Against Baseline Models}
-    \label{tab:main_results}
-    \centering
-    \begin{tabular}{lcccc}
-        \toprule
-        \textbf{Model} & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{FLOPS (G)}$\downarrow$ \\
-        \midrule
-        DualAttnNet    & 0.8210                             & 0.8192                       & 0.9327                 & 0.00                           \\
-        \cmidrule{1-5}
-        LinearAE       & 0.7987                             & 0.7966                       & 0.9176                 & 0.00                           \\
-        CNNAE          & 0.7996                             & 0.7975                       & 0.9175                 & 0.00                           \\
-        Transformer AE & 0.5678                             & 0.5634                       & 0.6812                 & 0.00                           \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+
 
 
 \subsection{Abalaton study}
 
 \begin{table}[htbp]
-    \caption{Ablation Study of DualAttnNet Components}
+    \caption{Ablation Study of DualAttnWaveNet Components}
     \label{tab:ablation}
     \centering
     \begin{tabular}{lccc}
         \toprule
         \textbf{Model Variant} & \textbf{Accuracy (\%)} $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC} $\uparrow$ \\
         \midrule
-        DualAttnNet (Full)     & 0.8210                            & 0.8192                       & 0.9334                  \\
+        DualAttnWaveNet (Full) & 0.8367                            & 0.8366                       & 0.9327                  \\
         \cmidrule{1-4}
         w/o Mutual Attention   & 0.8289                            & 0.8288                       & 0.9294                  \\
         w/o Wavelet Loss       & 0.8273                            & 0.8273                       & 0.9283                  \\
