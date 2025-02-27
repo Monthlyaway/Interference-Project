@@ -26,6 +26,18 @@ style=alphabetic,
 \begin{document}
 \maketitle
 
+\section{Introduction}
+
+Modern satellite communication systems, leveraging their unmatched advantages of global coverage, long-range connectivity, and transmission stability, have become indispensable for critical applications ranging from disaster response to aviation navigation. However, the rapid deployment of ultra-large non-geostationary orbit (NGSO) constellations—comprising thousands of low-Earth orbit (LEO) satellites—has introduced unprecedented interference risks to legacy geostationary (GSO) networks. This coexistence challenge arises from shared frequency bands, where NGSO signals inadvertently degrade GSO communications, threatening service reliability for essential global infrastructure despite recent regulatory updates prioritizing equitable spectrum sharing.
+
+
+Conventional interference detection techniques, dominated by energy detection (ED), measure signal energy against predefined thresholds\cite{kay2009fundamentals}. While effective in Gaussian noise environments, ED struggles to distinguish weak interference from noise in low-SNR regimes, leading to high false-alarm rates. Enhanced variants, such as cyclostationary feature detection\cite{experimentalCyclostationary}, improve robustness but incur prohibitive computational costs, particularly in scenarios characterized by rapid orbital dynamics. Two-step hybrid approaches \cite{wangCoFrequencyInterferenceAnalysis2020} integrating pilot cancellation have shown promise for specific standards like DVB-S2X, though their reliance on hardware modifications limits scalability.
+
+Recent innovations in machine learning (ML) aim to overcome these limitations. Early work employed deep learning models—including convolutional autoencoders\cite{saifaldawlaConvolutionalAutoencodersNonGeostationary2024} and LSTM-based architectures\cite{9384473}—to detect interference by analyzing in-phase/quadrature (IQ) samples or amplitude features. Emerging machine learning approaches reframe interference detection as an anomaly detection problem, leveraging deep learning models to distinguish interference from nominal transmissions.  A prominent strategy involves using autoencoder architectures to reconstruct interference-free signals, where deviations between the input and reconstructed output signal energy highlight potential interference.  Transformer-based detectors have demonstrated state-of-the-art AUC scores by capturing long-range dependencies in interference patterns\cite{saifaldawlaGenAIBasedModelsNGSO2024}.
+
+Despite breakthroughs, critical challenges persist. First, transformer-based architectures, while achieving superior accuracy, require resource-intensive training workflows unsuited for real-time deployment. Second, existing frameworks process time and frequency domains independently, neglecting cross-domain interactions that could enhance detection robustness. 
+
+
 \section{System Model}
 \label{sec:system_model}
 
@@ -239,6 +251,6 @@ These improvements stem from DualAttWaveNet’s wavelet-constrained reconstructi
 
 \end{table}
 
-
+\printbibliography
 
 \end{document}
