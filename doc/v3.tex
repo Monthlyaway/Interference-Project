@@ -20,6 +20,8 @@
 \usepackage{adjustbox}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
 \begin{document}
 
 \title{V3}
@@ -34,9 +36,7 @@
 \maketitle
 
 \begin{abstract}
-    This document is a model and instructions for \LaTeX.
-    This and the IEEEtran.cls file define the components of your paper [title, text, heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters, Footnotes,
-    or Math in Paper Title or Abstract.
+    The increase of low Earth orbit (LEO) satellite constellations has intensified interference risks with geostationary (GSO) networks, demanding scalable, real-time detection solutions. Existing deep learning approaches either sacrifice accuracy for efficiency or fail to adapt to dynamic spectral overlaps. We propose DualAttWaveNet, a multimodal autoencoder integrating bidirectional cross-domain attention and multi-scale wavelet regularization to address these challenges. Our framework processes synchronized time-domainand frequency-domain signal, fusing them via a lightweight mutual attention mechanism without computational bottlenecks. Wavelet transform regularization enforce reconstruction fidelity across temporal and spectral resolutions.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -49,11 +49,11 @@ The rapid increase of non-geostationary orbit (NGSO) satellite constellations, f
 
 Standardized frameworks define permissible interference thresholds and aggregation methodologies. For instance, the International Telecommunication Union (ITU) mandates a $-10~\text{dB}$ $I / N$ ceiling over 99.9\% of operational intervals to protect GSO receiver integrity \cite{itur2017ProtectionCriteriaOperation}. Similarly, EPFD aggregation techniques measure the total power flux density from distributed LEO transmitters to ensure that the aggregate interference at GSO terminals remains within acceptable limits \cite{itur2002AggregateDownlinkEquivalent}.
 
-Traditional interference detection methods, such as energy detection (ED), operate by measuring signal energy over a predefined time window and comparing it to a static threshold \cite{kay2009fundamentals}. While computationally efficient, ED often struggles to differentiate weak interference from background noise in low signal-to-noise (SNR) scenarios, leading to missed detections or unsustainable false-alarm rates. Enhanced techniques like cyclostationary feature detection improve robustness by exploiting periodic signal properties \cite{experimentalCyclostationary}, yet they incur significant computational costs when applied to LEO systems. Two-step hybrid approaches integrating pilot cancellation and hardware-based filtering have demonstrated limited success but lack the adaptability to support evolving satellite architectures \cite{wangCoFrequencyInterferenceAnalysis2020}.
+Traditional interference detection methods, such as energy detection (ED), operate by measuring signal energy over a predefined time window and comparing it to a static threshold \cite{kay2009fundamentals}. While computationally efficient, ED often struggles to differentiate weak interference from background noise in low signal-to-noise (SNR) scenarios, leading to missed detections or unsustainable false-alarm rates. Enhanced techniques like cyclostationary feature detection improve robustness by exploiting periodic signal properties \cite{experimentalCyclostationary}, yet they cause significant computational costs when applied to LEO systems. Two-step hybrid approaches integrating pilot cancellation and hardware-based filtering have demonstrated limited success but lack the adaptability to support evolving satellite architectures \cite{wangCoFrequencyInterferenceAnalysis2020}.
 
 Recent advances in machine learning (ML) seek to mitigate the shortcomings of traditional detection frameworks. Initial efforts utilized deep neural networks, such as  LSTM-based architectures \cite{pellacoSpectrumPredictionInterference2019}, to identify interference by processing in-phase/quadrature (IQ) signal components or time-domain amplitude signal. Contemporary methodologies view the detection task as an anomaly discrimination problem, training models to isolate interference from nominal transmissions by learning their intrinsic signatures. Autoencoder-based strategies \cite{saifaldawlaConvolutionalAutoencodersNonGeostationary2024}, for instance, reconstruct idealized interference-free signals from raw inputs; significant energy deviations between the input and reconstructed waveforms are flagged as potential interference. Transformers have further pushed detection boundaries, attaining state-of-the-art area-under-curve (AUC) scores by modeling long-range spectral and temporal correlations in signal \cite{saifaldawlaGenAIBasedModelsNGSO2024}. Nevertheless, these architectures impose substantial computational burdens during training, making them impractical for latency-sensitive satellite operations.
 
-To overcome these barriers, we propose DualAttWaveNet, a multimodal architecture that unifies time-frequency signal representations, achieving an AUC of 0.9327 while reducing inference latency by 3.8 times compared to transformer baselines. The core contributions include:
+To overcome these barriers, we propose DualAttWaveNet, a multimodal architecture that unifies time-frequency signal representations, achieving an AUC of 0.9327 while \todo{FLOPS 未填写} The core contributions include:
 
 \begin{enumerate}
     \item Bidirectional Cross-Domain Attention: A lightweight mutual attention mechanism that dynamically fuses temporal waveforms and spectral features, learning interdependencies between domains without concatenation bottlenecks.
@@ -206,38 +206,82 @@ The dataset is partitioned under anomaly detection constraints, with training (1
 
 \subsection{Evaluation Results}
 
-DualAttWaveNet achieves state-of-the-art interference detection performance across metrics, as shown in Table~\ref{tab:main_results}. With an AUC of 0.9327, it outperforms ConvAE (0.9175), ConvAE+Attention (0.8719), and TransAE (0.6812), as quantified by ROC analysis (\figurename~\ref{fig:roc_comparison}). Notably, the model surpasses the previous best method, TrID \cite{saifaldawlaGenAIBasedModelsNGSO2024}, which achieved AUCs of 0.8318 (time domain) and 0.7106 (spectral domain), highlighting superior cross-modal harmonization through dual-attention synergy.
-
-
-\begin{table*}[t]
-    \caption{Performance Comparison of DualAttnWaveNet Against Baseline Models}
-    \label{tab:main_results}
-    \centering
-    \begin{tabular}{lcccc}
-        \toprule
-        \textbf{Model}  & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{FLOPS (G)}$\downarrow$ \\
-        \midrule
-        DualAttnWaveNet & 0.8367                             & 0.8366                       & 0.9327                 & 0.00                           \\
-        \cmidrule{1-5}
-        LinearAE        & 0.7987                             & 0.7966                       & 0.9176                 & 0.00                           \\
-        CNNAE           & 0.7996                             & 0.7975                       & 0.9175                 & 0.00                           \\
-        TrID            & 0.8318                             & 0.8321                       & 0.8318                 & 0.00                           \\
-        Transformer AE  & 0.5678                             & 0.5634                       & 0.6812                 & 0.00                           \\
-        \bottomrule
-    \end{tabular}
-\end{table*}
-
-
-When conducting confusion matrix analysis, we set the detection threshold to $\mu + 1 \cdot \sigma$, where $\mu$ and $\sigma$ are mean and standard deviation of reconstruction error on validation set.  Reconstruction error over this threshold is considered to be in class 1. \figurename~\ref{fig:confusion_matrix} shows that DualAttWaveNet has balanced precision-recall tradeoff (F1: 83.66\%). Baselines exhibit critical limitations: ConvAE+Attention suffers a 4.56\% AUC drop relative to ConvAE, shows  the insufficiency of naive attention for cross-domain alignment. TransAE’s poor convergence (AUC: 0.6812) suggests transformer architectures is hard to converge to optimal point during training.
-
-\begin{figure}[t]
+\begin{figure}[tb]
     \centering
     \includegraphics[width=0.8\linewidth]{roc-comparison.pdf}
     \caption{ROC curves for DualAttnWaveNet and baseline models. DualAttnWaveNet achieves the highest AUC score.}
     \label{fig:roc_comparison}
 \end{figure}
 
-\begin{figure}[t]
+DualAttWaveNet achieves state-of-the-art interference detection performance across metrics, as shown in Table~\ref{tab:main_results}. With an AUC of 0.9327, it outperforms ConvAE (0.9175), ConvAE+Attention (0.8719), and TransAE (0.6812), as quantified by ROC analysis (\figurename~\ref{fig:roc_comparison}). Notably, the model surpasses the previous best method, TrID \cite{saifaldawlaGenAIBasedModelsNGSO2024}, which achieved AUCs of 0.8318 (time domain) and 0.7106 (spectral domain), highlighting superior cross-modal harmonization through dual-attention synergy.
+
+\begin{table}[t]
+    \caption{Performance Comparison of DualAttnWaveNet Against Baseline Models}
+    \label{tab:main_results}
+    \centering
+    \resizebox{\linewidth}{!}{\begin{tabular}{lcccc}
+            \toprule
+            \textbf{Model}  & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{FLOPS (G)} \\
+            \midrule
+            DualAttnWaveNet & 0.8351                             & 0.8351                       & 0.9327                 & 5.19               \\
+            \cmidrule{1-5}
+            LinearAE        & 0.8149                             & 0.8149                       & 0.9176                 & 0.49               \\
+            CNNAE           & 0.8170                             & 0.8169                       & 0.9175                 & 0.50               \\
+            CNNAE+Attention & 0.7695                             & 0.7691                       & 0.8718                 & 3.01               \\
+            TrID            & 0.8318                             & 0.8321                       & 0.8318                 & \todo{Unknown}     \\
+            Transformer AE  & 0.6812                             & 0.5921                       & 0.6812                 & 26.43              \\
+            \bottomrule
+        \end{tabular}}
+\end{table}
+
+\begin{table}[t]
+    \caption{Ablation Study of DualAttnWaveNet Components}
+    \label{tab:ablation}
+    \centering
+    \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccc}
+            \toprule
+            \textbf{Model Variant} & \textbf{Accuracy (\%)} $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC} $\uparrow$ \\
+            \midrule
+            DualAttnWaveNet (Full) & 0.8351                            & 0.8366                       & 0.9327                  \\
+            \cmidrule{1-4}
+            w/o Mutual Attention   & 0.8289                            & 0.8288                       & 0.9294                  \\
+            w/o Wavelet Loss       & 0.8273                            & 0.8273                       & 0.9283                  \\
+            Vanilla Implementation & 0.7995                            & 0.7975                       & 0.9175                  \\
+            \bottomrule
+        \end{tabular}
+
+    }
+
+\end{table}
+
+
+
+% \begin{table*}[t]
+%     \caption{Performance Comparison of DualAttnWaveNet Against Baseline Models}
+%     \label{tab:main_results}
+%     \centering
+%     \begin{tabular}{lcccc}
+%         \toprule
+%         \textbf{Model}  & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{FLOPS (G)}$\downarrow$ \\
+%         \midrule
+%         DualAttnWaveNet & 0.8351                             & 0.8351                       & 0.9327                 & 0.00                           \\
+%         \cmidrule{1-5}
+%         LinearAE        & 0.8149                             & 0.8149                       & 0.9176                 & 0.00                           \\
+%         CNNAE           & 0.8170                             & 0.8169                       & 0.9175                 & 0.00                           \\
+%         CNNAE+Attention & 0.7695                             & 0.7691                       & 0.8718                 & 0.00                           \\
+%         TrID            & 0.8318                             & 0.8321                       & 0.8318                 & 0.00                           \\
+%         Transformer AE  & 0.6812                             & 0.5921                       & 0.6812                 & 0.00                           \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table*}
+
+
+When conducting confusion matrix analysis, we set the detection threshold to $\mu + 1 \cdot \sigma$, where $\mu$ and $\sigma$ are mean and standard deviation of reconstruction error on validation set.  Reconstruction error over this threshold is considered to be in class 1. \figurename~\ref{fig:confusion_matrix} shows that DualAttWaveNet has balanced precision-recall tradeoff (F1: 83.51\%). Baselines exhibit critical limitations: ConvAE+Attention suffers a 4.56\% AUC drop relative to ConvAE, shows  the insufficiency of naive attention for cross-domain alignment. TransAE’s poor convergence (AUC: 0.6812) suggests transformer architectures is hard to converge to optimal point during training.
+
+
+
+\begin{figure}[tb]
     \centering
     \includegraphics[width=\linewidth]{confusion.pdf}
     \caption{Confusion matrix for DualAttnWaveNet and baselines on the test set}
@@ -247,26 +291,26 @@ When conducting confusion matrix analysis, we set the detection threshold to $\m
 
 \subsection{Ablation Study}
 
-To validate the necessity of DualAttWaveNet’s architectural innovations, we conducted component-wise ablation experiments (\ref{tab:ablation}). The full model achieves peak performance (Accuracy: 83.67\%, F1: 83.66\%, AUC: 0.9327), while ablating the mutual attention module reduces AUC to 0.9294 (−0.33\%), indicating its critical role in aligning temporal-spectral features. Removing the wavelet coherence loss further degrades AUC to 0.9283 (−0.44\%), confirming its utility in preserving time-frequency structure. The vanilla implementation (no mutual attention or wavelet loss) yields the lowest metrics (AUC: 0.9175, Accuracy: 79.95\%), underscoring that naively combining branches without alignment mechanisms underperforms all proposed variants by significant margins.
+To validate the architectural design of DualAttWaveNet, systematic component ablation experiments were conducted (Table \ref{tab:ablation}). The full configuration achieves peak performance, while removing the mutual attention module reduces AUC to 0.9294 (−0.33\%), demonstrating its necessity for temporal-spectral feature alignment. Further ablation of the wavelet coherence loss degrades performance to 0.9283 AUC (−0.44\% from full model), confirming the loss’s role in preserving time-frequency structure. The baseline implementation (no mutual attention or wavelet loss) yields the lowest metrics (AUC: 0.9175, Accuracy: 79.95\%), underperforming all proposed variants.
 
-\begin{table*}[t]
-    \caption{Ablation Study of DualAttnWaveNet Components}
-    \label{tab:ablation}
-    \centering
-    \begin{tabular}{lccc}
-        \toprule
-        \textbf{Model Variant} & \textbf{Accuracy (\%)} $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC} $\uparrow$ \\
-        \midrule
-        DualAttnWaveNet (Full) & 0.8367                            & 0.8366                       & 0.9327                  \\
-        \cmidrule{1-4}
-        w/o Mutual Attention   & 0.8289                            & 0.8288                       & 0.9294                  \\
-        w/o Wavelet Loss       & 0.8273                            & 0.8273                       & 0.9283                  \\
-        Vanilla Implementation & 0.7995                            & 0.7975                       & 0.9175                  \\
-        \bottomrule
-    \end{tabular}
-    \vspace{2pt}
+% \begin{table*}[t]
+%     \caption{Ablation Study of DualAttnWaveNet Components}
+%     \label{tab:ablation}
+%     \centering
+%     \begin{tabular}{lccc}
+%         \toprule
+%         \textbf{Model Variant} & \textbf{Accuracy (\%)} $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC} $\uparrow$ \\
+%         \midrule
+%         DualAttnWaveNet (Full) & 0.8367                            & 0.8366                       & 0.9327                  \\
+%         \cmidrule{1-4}
+%         w/o Mutual Attention   & 0.8289                            & 0.8288                       & 0.9294                  \\
+%         w/o Wavelet Loss       & 0.8273                            & 0.8273                       & 0.9283                  \\
+%         Vanilla Implementation & 0.7995                            & 0.7975                       & 0.9175                  \\
+%         \bottomrule
+%     \end{tabular}
+%     \vspace{2pt}
 
-\end{table*}
+% \end{table*}
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
