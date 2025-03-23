@@ -1,0 +1,57 @@
+\documentclass[conference]{IEEEtran}
+%Template version as of 6/27/2024
+
+\usepackage[T1]{fontenc}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\graphicspath{{./images/}}
+\usepackage{textcomp}
+\usepackage{xcolor}
+% \usepackage[UTF8]{ctex}
+% \usepackage[english]{babel}
+% \usepackage{microtype}
+\usepackage{multirow}
+\usepackage{booktabs}   
+\usepackage{adjustbox}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
+\begin{document}
+
+\title{V4}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Chunyu Yang}
+    \IEEEauthorblockA{\textit{School of Computer Science} \\
+        \textit{Fudan University}\\
+        Shanghai, China \\
+        22307140114@m.fudan.edu.cn}
+}
+
+\maketitle
+
+\begin{abstract}
+    The increasing number of non-geostationary orbit satellites (NGSOs) and their frequency bands overlap with geostationary orbit satellites (GSOs) have made interference detection very important. A good interference detection method can help adapt to dynamic environments and check simulation results after satellite launches. Previous works use deep learning anomaly detection that involves training an encoder-decoder model and compare input-output differences with thresholds to ensure robustness. The state-of-the-art model, TrID (transformer-based interference detector), applies transformer encoder to process input feature maps, achieving best AUC 0.8318 and F1-score 0.8321. But its multi-head attention has high computational cost. Also, TrID trains two models separately for time-domain and frequency-domain inputs, ignoring their connections. To overcome these problems, we propose DualAttWaveNet. It takes both time and frequency signals as input, fuses them by a novel bidirectional attention method, and employs wavelet regularization loss. We train the model on public dataset which consists of 28 hour of satellite signals. Experiments show compared to TrID, DualAttWaveNet improves AUC by 12\% and reduces latency by 3 times while maintaining F1-score. \end{abstract}
+
+\begin{IEEEkeywords}
+    interference detection, multimodal fusion, bidirectional attention, wavelet transform
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+The accelerated deployment of low Earth orbit (LEO) satellite systems poses grand challenges for next-generation communication networks, with over 20,000 satellites projected to be launched by leading operators including SpaceX's Starlink\cite{starlink} and Starshield \cite{spacex_starshield}, as well as Eutelsat OneWeb \cite{oneweb}. These mega-constellations have become critical infrastructure to enable global connectivity, driving the commercialization of space-based communications while expanding broadband access to underserved regions \cite{reddyLowEarthOrbit2023}. However, the exponential growth in satellite numbers brings fundamental technical obstacles. Rising risk of spectrum overlap between LEO and geosynchronous orbit (GSO) satellites creates urgent demands for scalable interference management frameworks that can evolve with expanding LEO networks.
+
+Current research in satellite interference management primarily centers on three domains: preventive measures targeting pre-deployment risk minimization \cite{sharmaInlineInterferenceMitigation2016, liOptimalBeamPower2019}, static mitigation protocols for predefined interference scenarios \cite{wangCoFrequencyInterferenceAnalysis2020, zhangSpectralCoexistenceLEO2018}, and simulation-driven prediction models optimized through discrete time or spatial sampling \cite{wangCoFrequencyInterferenceAnalysis2020}. While these approaches have advanced interference governance under controlled assumptions, they face critical limitations when confronting the unpredictable dynamics of space environments. The satellite networks must contend with time varying disturbances, including fluctuations in solar radiation and variations in atmospheric conditions, among other factors \cite{facskoSpaceWeatherEffects2023}. Furthermore, reliance on conventional detection frameworks, often dependent on fixed thresholds or static signal characteristics, struggles to address the escalating complexity of real-time interference identification. These challenges demonstrate an urgent need for effective detection mechanisms capable of rapid response to interference patterns and seamless integration with evolving physical-layer dynamics, without compromising the accuracy requirements of simulation-based validation.
+
+Current approaches to interference detection in satellite communications can be broadly categorized into traditional analytical methods and machine learning (ML)-based methods. Conventional techniques typically employ time-domain parameterization, such as energy detection (ED), which quantifies signal energy over fixed intervals for threshold-based anomaly identification \cite{kay2009fundamentals}. Others exploit spectral features, including cyclostationary analysis, to differentiate interference from periodic communication signals \cite{experimentalCyclostationary}. In contrast, ML-driven methods address detection through two paradigmatic lenses: classification and signal reconstruction. Classification-based approaches utilize deep neural networks to analyze in-phase/quadrature (IQ) samples or temporal signal representations, assigning interference labels via learned decision boundaries \cite{pellacoSpectrumPredictionInterference2019}. Conversely, encoder-decoder architectures formulate detection as an anomaly discrimination task by training models to reconstruct idealized interference-free waveforms from raw inputs, with deviations between original and reconstructed signals indicating potential interference \cite{saifaldawlaConvolutionalAutoencodersNonGeostationary2024}. Recent innovations further integrate attention mechanisms to capture long-range spectral dependencies, enhancing sensitivity to long-horizen anomalies \cite{saifaldawlaGenAIBasedModelsNGSO2024}. 
+
+
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
