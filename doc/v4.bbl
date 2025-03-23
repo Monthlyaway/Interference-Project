@@ -64,4 +64,7 @@ A.~Saifaldawla, F.~Ortiz, E.~Lagunas, and S.~Chatzinotas, ``Convolutional autoen
 \bibitem{saifaldawlaGenAIBasedModelsNGSO2024}
 A.~Saifaldawla, F.~Ortiz, E.~Lagunas, A.~B.~M. Adam, and S.~Chatzinotas, ``Genai-based models for ngso satellites interference detection,'' \emph{IEEE Transactions on Machine Learning in Communications and Networking}, vol.~2, pp. 904--924, 2024.
 
+\bibitem{vaswaniAttentionAllYou2017}
+A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez, {\L}.~ukasz Kaiser, and I.~Polosukhin, ``Attention is {{All}} you {{Need}},'' in \emph{Advances in {{Neural Information Processing Systems}}}, vol.~30.\hskip 1em plus 0.5em minus 0.4em\relax Curran Associates, Inc., 2017.
+
 \end{thebibliography}
