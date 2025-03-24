@@ -26,17 +26,15 @@
 
 \author{
     \IEEEauthorblockN{
-        Chunyu Yang\IEEEauthorrefmark{1},
-        Boyu Yang\IEEEauthorrefmark{2},
-        Kun Qiu\IEEEauthorrefmark{3},
-        Yue Gao\IEEEauthorrefmark{4}
+        Chunyu Yang,
+        Boyu Yang,
+        Kun Qiu,
+        Zhe Chen,
+        Yue Gao
     }
     \IEEEauthorblockA{
         School of Computer Science, Fudan University, China\\
-        \IEEEauthorrefmark{1} 22307140114@m.fudan.edu.cn, 
-        \IEEEauthorrefmark{2} 24110240144@m.fudan.edu.cn, \\
-        \IEEEauthorrefmark{3} qkun@fudan.edu.cn, 
-        \IEEEauthorrefmark{4} gao.yue@fudan.edu.cn
+        \{22307140114, 24110240144\}@m.fudan.edu.cn, \{qkun, zhechen, gao.yue\}@fudan.edu.cn
     }
 }
 
@@ -60,6 +58,7 @@ The accelerated deployment of low Earth orbit (LEO) satellite systems poses huge
 Current research in satellite interference management primarily centers on three domains: preventive measures targeting pre-deployment risk minimization \cite{sharmaInlineInterferenceMitigation2016, liOptimalBeamPower2019}, static mitigation protocols \cite{wangCoFrequencyInterferenceAnalysis2020, zhangSpectralCoexistenceLEO2018}, and simulation-driven prediction models optimized through discrete time or spatial sampling \cite{wangCoFrequencyInterferenceAnalysis2020}. While these approaches have advanced interference governance under controlled assumptions, they face critical limitations when confronting the unpredictable dynamics of space environments. The satellite networks must contend with time varying disturbances, including fluctuations in solar radiation and variations in atmospheric conditions, among other factors \cite{facskoSpaceWeatherEffects2023}. Furthermore, reliance on conventional detection methods, often dependent on fixed thresholds or static signal characteristics, struggles to address the escalating complexity of real-time interference identification. These challenges demonstrate an urgent need for effective detection mechanisms capable of rapid response to interference patterns and seamless integration with evolving physical-layer dynamics, without compromising the accuracy requirements of simulation-based validation.
 
 Current approaches to interference detection in satellite communications can be broadly categorized into traditional analytical methods and machine learning (ML)-based methods. Conventional techniques typically use  energy detection (ED), which quantifies signal energy over fixed intervals for threshold-based anomaly identification \cite{kay2009fundamentals}. Others exploit spectral features, including cyclostationary analysis, to differentiate interference from periodic communication signals \cite{experimentalCyclostationary}. In contrast, ML-driven methods address detection through two paradigmatic lenses: classification and signal reconstruction. Classification-based approaches utilize deep neural networks to analyze in-phase/quadrature (IQ) samples or temporal signal representations, assigning interference labels via learned decision boundaries \cite{pellacoSpectrumPredictionInterference2019}. Conversely, encoder-decoder architectures formulate detection as an anomaly discrimination task by training models to reconstruct idealized interference-free waveforms from raw inputs, with deviations between original and reconstructed signals indicating potential interference \cite{saifaldawlaConvolutionalAutoencodersNonGeostationary2024}. Recent innovations further integrate transformer mechanisms to capture long-range spectral dependencies, enhancing sensitivity to long-horizen anomalies \cite{saifaldawlaGenAIBasedModelsNGSO2024}.
+
 
 Despite advancements, critical challenges persist in existing interference detection methods. First, threshold-dependent traditional methods — exemplified by energy detection — exhibit degraded reliability in low-SNR regimes, where static thresholds fail to dynamically adapt to noise fluctuations or interference intensity variations, leading to frequent false negatives in rapidly evolving orbital conditions \cite{saifaldawlaGenAIBasedModelsNGSO2024}. Second, while attention-driven architectures achieve state-of-the-art detection sensitivity, their computational overhead from multi-head attention mechanisms imposes huge latency during both training and inference, making them unsuitable for resource-constrained satellite edge devices. Third, contemporary deep learning models often process time-domain and frequency-domain signal representations in isolation, training separate networks for each modality. This decoupled approach neglects inherent correlations that could enhance detection robustness.
 
