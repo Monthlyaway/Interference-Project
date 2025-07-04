@@ -271,9 +271,7 @@ Reflection padding is used to mitigate boundary artifacts while preserving tempo
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{wavelet-transform.pdf}
-    \caption{(Top) Normalized Morlet wavelet kernels spanning scales \( s \in \{4, 8, 16\} \), designed to capture variable temporal-spectral features. (Bottom) Example analysis of a synthetic signal: Gaussian white noise (top-left) decomposed into distinct frequency components (red: \( s=4 \), high-frequency; blue: \( s=8 \), mid-frequency; green: \( s=16 \), low-frequency). Larger scales broaden temporal support for low-frequency emphasis, while smaller scales localize high-frequency transients.
-    }
-
+    \caption{Multi-scale wavelet analysis using Morlet wavelets. (Top-left) Normalized wavelet kernels at scales $s \in \{5, 10, 20\}$, with increasing temporal support for larger scales. (Top-right) Input signal. (Bottom) Wavelet transform responses at different scales demonstrating the scale-frequency trade-off: (Bottom-left) Fine scale ($s=5$, red) captures high-frequency details and transients; (Bottom-right) Coarse scale ($s=20$, green) emphasizes low-frequency components with increased smoothing. The dashed line shows the original input for reference.}
     \label{fig:wavelet-transform}
 \end{figure}
 
@@ -283,15 +281,7 @@ Our overall loss function combines the standard reconstruction loss with a wavel
 \end{equation}
 where the first term measures the mean squared error (MSE) between the reconstructed signal $\mathbf{\hat{X}}$ and the ground truth $\mathbf{X}$, while the second term, weighted by 0.5, enforces consistency in the wavelet domain across multiple scales $s \in \mathbb{S}$. This dual-domain optimization strategy ensures that the reconstruction preserves both temporal dynamics and multi-scale spectral characteristics of the original signal.
 
-
-\subsection{Threshold Selection}
-
-The final output of the model is a reconstructed signal. To determine whether the input signal contains interference, we compare the reconstructed signal with the original signal. If the difference is larger than a predefined threshold, we classify the input signal as interference. The threshold is determined by the following formula:
-
-\begin{equation}
-    \Gamma_{\text{th}} = \mu + \text{std}(\mathbf{L})
-\end{equation}
-where $\mu$ is the mean of the loss in validation set.  $\text{std}(\mathbf{L})$ is the standard deviation of the loss. This strategy assumes that the loss of the model on the validation set is normally distributed, and the threshold is set to be one standard deviation above the mean. Any loss above this threshold is considered outliers, hence containing interference.
+The model outputs a reconstructed signal, which is compared with the original input to detect interference. If the reconstruction error exceeds a threshold $\Gamma_{\text{th}} = \mu + \text{std}(\mathbf{L})$, where $\mu$ and $\text{std}(\mathbf{L})$ are the mean and standard deviation of validation losses, the signal is classified as containing interference. This approach assumes normally distributed validation losses, with outliers (losses exceeding one standard deviation above the mean) indicating interference.
 
 
 
@@ -332,7 +322,7 @@ As shown in Table \ref{tab:main_results}, DualAttWaveNet achieves state-of-the-a
     \caption{Performance Comparison of DualAttWaveNet Against Baseline Models}
     \label{tab:main_results}
     \centering
-    \resizebox{0.9\linewidth}{!}{
+    \resizebox{\linewidth}{!}{
         \begin{tabular}{lcccc}
             \toprule
             \textbf{Model}  & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{Time(s)} $\downarrow$ \\
