@@ -84,7 +84,7 @@
 %     \item Comprehensive evaluation on a public satellite communication dataset (48 hours duration) demonstrates DualAttWaveNet's superiority: 12\% higher AUC and 50\% faster inference compared to state-of-the-art baselines, while maintaining competitive F1-score.
 % \end{enumerate}
 
-% \begin{figure*}[tb]
+% \begin{figure*}[htbp]
 %     \centering
 %     \includegraphics[width=0.76\linewidth]{overview.pdf}
 %     \caption{Summary of our approach. Architecture of the cross-modal signal enhancement model showing dual-branch processing: time domain (800d) and frequency domain (800d) inputs are downsampled to 64d, fused through bidirectional attention into a 128d latent space ($\mathcal{Z}$), then upsampled to produce a reconstructed 1600d signal. Wavelet transforms ($X_\text{wave}$ and $\hat{X}_{\text{wave}}$) are applied to the original and reconstructed signals.}
@@ -105,7 +105,7 @@ Approaches to interference detection in satellite communications can be broadly 
 
 Despite these advancements, several critical challenges persist in existing interference detection methods. First, threshold-dependent traditional approaches—exemplified by energy detection—show degraded reliability in low-SNR regimes, where static thresholds fail to dynamically adapt to noise fluctuations or interference intensity variations, resulting in frequent false negatives under rapidly evolving orbital conditions \cite{saifaldawlaGenAIBasedModelsNGSO2024}. Second, while attention-driven architectures achieve state-of-the-art detection sensitivity, their computational overhead from multi-head attention mechanisms creates significant latency during both training and inference, making them unsuitable for resource-constrained satellite edge devices. Third, contemporary deep learning models often process time-domain and frequency-domain signal representations in isolation by training separate networks for each modality. This decoupled approach yields suboptimal performance—time-domain models achieve an AUC of only 0.8318 while frequency-domain models score a mere 0.7106, fundamentally limiting detection capability.
 
-\begin{figure}[t!]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\linewidth]{system-model.pdf}
     \caption{Interference scenario between GSO and LEO satellite systems.}
@@ -120,9 +120,9 @@ To address these challenges, we propose \textbf{DualAttWaveNet}, a unified model
     \item Comprehensive evaluation on a public satellite communication dataset (48 hours duration) demonstrates DualAttWaveNet's superiority: 12\% higher AUC and 50\% faster inference compared to state-of-the-art baselines, while maintaining competitive F1-score.
 \end{enumerate}
 
-\begin{figure*}[tb]
+\begin{figure*}[htbp]
     \centering
-    \includegraphics[width=0.9\linewidth]{overview.pdf}
+    \includegraphics[width=0.8\linewidth]{overview.pdf}
     \caption{Summary of our approach. Architecture of the cross-modal signal enhancement model showing dual-branch processing: time domain (800d) and frequency domain (800d) inputs are downsampled to 64d, fused through bidirectional attention into a 128d latent space ($\mathcal{Z}$), then upsampled to produce a reconstructed 1600d signal. Wavelet transforms ($X_\text{wave}$ and $\hat{X}_{\text{wave}}$) are applied to the original and reconstructed signals.}
 
     \label{fig:overview}
@@ -194,59 +194,32 @@ Despite their performance, transformer-based models come with drawbacks. Their c
 \section{Overall Design}
 \label{sec:model}
 
+% \subsection{Proposed Deep Learning Model}
+% \label{subsec:proposed_model}
+
+% In light of the challenges discussed in Section \ref{sec:background}, specifically the prohibitive computational cost of multi-head attention and the need for higher classification accuracy—we propose DualAttWaveNet. It is an autoencoder that accepts dual-domain inputs and reconstructs both representations concurrently.
+
+% As illustrated in \figurename~\ref{fig:overview}, the architecture features separate encoders and decoders for the time-domain and frequency-domain signals. A key innovation in our design is the incorporation of a bidirectional attention fusion module, which replaces conventional multi-head attention. This module leverages single-head dot-product attention with spatial reduction, thereby minimizing computational overhead while efficiently capturing cross-domain dependencies. The fusion of features prior to decoding is critical for achieving superior reconstruction accuracy, which in turn improves the overall detection performance.
+
+% The input for both domains is presented as tensors of shape $B \times 800$, with $B$ denoting the batch size. Following dedicated convolution modules that serve as downsampling layers, each input is transformed into a $B \times 64$ latent representation. These latent features are then processed by the bidirectional attention module, where cross-modal interactions are computed in both directions. The resultant features are concatenated and fed into upsampling layers that reconstruct the outputs, yielding a final tensor of shape $B \times 1600$.
+
+% Furthermore, to directly address issues related to classification accuracy, the model is trained using a composite loss function that integrates the conventional mean squared error (MSE) with a novel wavelet-domain regularization term, dicussed in Section~\ref{subsec:wavelet}. This wavelet loss enforces multi-scale consistency during reconstruction, ensuring that both temporal features and spectral distributions are preserved.
+
 \subsection{Proposed Deep Learning Model}
 \label{subsec:proposed_model}
 
-In light of the challenges discussed in Section \ref{sec:background}, specifically the prohibitive computational cost of multi-head attention and the need for higher classification accuracy—we propose DualAttWaveNet. It is an autoencoder that accepts dual-domain inputs and reconstructs both representations concurrently.
+To address the computational cost of multi-head attention and improve classification accuracy, we propose DualAttWaveNet—an autoencoder that processes dual-domain inputs and reconstructs both representations concurrently.
 
-As illustrated in \figurename~\ref{fig:overview}, the architecture features separate encoders and decoders for the time-domain and frequency-domain signals. A key innovation in our design is the incorporation of a bidirectional attention fusion module, which replaces conventional multi-head attention. This module leverages single-head dot-product attention with spatial reduction, thereby minimizing computational overhead while efficiently capturing cross-domain dependencies. The fusion of features prior to decoding is critical for achieving superior reconstruction accuracy, which in turn improves the overall detection performance.
+As shown in \figurename~\ref{fig:overview}, the architecture employs separate encoders and decoders for time and frequency domains. Our key innovation is the bidirectional attention fusion module (Section~\ref{subsec:bi_attn}), which replaces multi-head attention with single-head dot-product attention and spatial reduction. This design minimizes computational overhead while capturing cross-domain dependencies, with fusion occurring before decoding to enhance reconstruction accuracy and detection performance.
 
-The input for both domains is presented as tensors of shape $B \times 800$, with $B$ denoting the batch size. Following dedicated convolution modules that serve as downsampling layers, each input is transformed into a $B \times 64$ latent representation. These latent features are then processed by the bidirectional attention module, where cross-modal interactions are computed in both directions. The resultant features are concatenated and fed into upsampling layers that reconstruct the outputs, yielding a final tensor of shape $B \times 1600$.
-
-Furthermore, to directly address issues related to classification accuracy, the model is trained using a composite loss function that integrates the conventional mean squared error (MSE) with a novel wavelet-domain regularization term, dicussed in Section~\ref{subsec:wavelet}. This wavelet loss enforces multi-scale consistency during reconstruction, ensuring that both temporal features and spectral distributions are preserved.
-
-% \subsection{Bidirectional Attention}
-% \label{subsec:bi_attn}
-
-% We propose a parameter-efficient mutual attention mechanism for cross-modal feature fusion. Unlike conventional multi-head attention in \cite{vaswaniAttentionAllYou2017}, our design employs single-head dot-product attention with spatial reduction to minimize computational overhead while maintaining inter-domain alignment capacity, as show in  \figurename~\ref{fig:bidirectional-attention}.
-
-% \begin{figure}[tb]
-%     \centering
-%     \includegraphics[width=0.65\linewidth]{bidirectional-attention.pdf}
-%     \caption{DualAttWaveNet's bidirectional attention mechanism. Both attention phase share the same parameter $Q, K$ and $V$. To decrease channel numbers, they are implemented as 1d-Convolution.}
-%     \label{fig:bidirectional-attention}
-% \end{figure}
-
-% Given input feature maps $\mathbf{X} \in \mathbb{R}^{B \times C \times L}$ (temporal domain) and $\mathbf{Y} \in \mathbb{R}^{B \times C \times L}$ (spectral domain), the mutual attention operator computes:
-
-% \begin{equation}
-%     \begin{aligned}
-%         \text{MutualAttn}(\mathbf{X}, \mathbf{Y})    & = \mathbf{X} + \gamma \cdot \text{AttentionGate}(\mathbf{X}, \mathbf{Y})                        \\
-%         \text{AttentionGate}(\mathbf{X}, \mathbf{Y}) & = \mathbf{V}_y \cdot \text{Softmax}\left(\frac{\mathbf{Q}_x \mathbf{K}_y^\top}{\sqrt{d}}\right)
-%     \end{aligned}
-% \end{equation}
-
-% where $\gamma$ is a learnable scalar initialized to 0, $\mathbf{Q}_x = \mathcal{W}_Q(\mathbf{X}) \in \mathbb{R}^{B \times L \times \frac{C}{8}}$, $\mathbf{K}_y = \mathcal{W}_K(\mathbf{Y}) \in \mathbb{R}^{B \times \frac{C}{8} \times L}$, and $\mathbf{V}_y = \mathcal{W}_V(\mathbf{Y}) \in \mathbb{R}^{B \times C \times L}$. The projection matrices $\mathcal{W}_{Q,K,V}$ implement 1D convolutions with kernel size 1, reducing channel dimensions by $8\times$ for queries/keys to optimize memory footprint.
-
-% The compatibility scores between temporal ($\mathbf{X}$) and spectral ($\mathbf{Y}$) features are computed through matrix multiplication of the reduced-channel representations. This produces an $L \times L$ affinity matrix that represents position-wise cross-domain correlations before applying row-wise softmax normalization.
-
-% To preserve original feature stability during early training, the residual connection is initially dampened ($\gamma=0$) and progressively strengthened through learning. The symmetric architecture applies identical attention operations in both temporal→spectral and spectral→temporal directions, in sequential form:
-
-% \begin{equation}
-%     \begin{aligned}
-%         \mathbf{\widehat{X}} & = \text{MutualAttn}(\mathbf{X}, \mathbf{Y}) \\
-%         \mathbf{\widehat{Y}} & = \text{MutualAttn}(\mathbf{Y}, \mathbf{X})
-%     \end{aligned}
-% \end{equation}
-
-% This bidirectional design shares parameters across both call of attention, enables joint refinement of both modalities without major comutational overhead.
+Both domain inputs have shape $B \times 800$ (batch size $B$). Dedicated convolution modules downsample these to $B \times 64$ latent representations, which undergo bidirectional attention processing. The resulting cross-modal features are concatenated and fed to transposed convolution layers for upsampling, reconstructing outputs of shape $B \times 1600$. The model is trained using a composite loss combining MSE with wavelet-domain regularization (Section~\ref{subsec:wavelet}), enforcing multi-scale consistency to preserve both temporal and spectral characteristics.
 
 \subsection{Bidirectional Attention}
 \label{subsec:bi_attn}
 
 We introduce a parameter-efficient mutual attention mechanism for cross-modal feature fusion. Unlike traditional multi-head attention \cite{vaswaniAttentionAllYou2017}, our method uses single-head dot-product attention with spatial reduction to lower computational costs while preserving inter-domain alignment, as shown in \figurename~\ref{fig:bidirectional-attention}.
 
-\begin{figure}[tb]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.65\linewidth]{bidirectional-attention.pdf}
     \caption{Bidirectional attention mechanism in DualAttWaveNet. Both attention phases share the same parameters $Q$, $K$, and $V$, implemented as 1D convolutions to reduce channel dimensions.}
@@ -272,86 +245,9 @@ To ensure training stability, the residual connection is initially dampened ($\g
     \end{aligned}
 \end{equation}
 
-This bidirectional design, with shared parameters, efficiently refines both modalities without significant computational overhead.
-
-% \subsection{Wavelet-Domain Spectral Regularization}
-% \label{subsec:wavelet}
-
-% Our temporal-spectral analysis employs parameterized Morlet wavelets with learned scale distributions. Given input sequence $x \in \mathbb{R}^{B \times C \times L}$, we construct a filter bank $\mathcal{F} \in \mathbb{R}^{S \times 1 \times K}$ through:
-
-% \begin{equation}
-%     \mathcal{W}_s(\tau) = \operatorname{Norm} \left(\cos(\frac{1.75\tau}{2}) \odot \mathcal{G}(\tau,s)\right)
-% \end{equation}
-
-% where $\mathcal{G}(\tau,s) = \exp(-\tau^2/(2s^2))$ is the Gaussian window, $s \in \mathbb{S}$ denotes wavelet scales, and $K=4s_{\text{max}}$ defines the kernel size from maximum scale $s_{\text{max}}$. Each filter is $L_2$-normalized to preserve energy consistency across scales.
-
-% The discrete wavelet transform is implemented as depth-wise separable convolution:
-
-% \begin{equation}
-%     \begin{aligned}
-%         \mathbf{X}_{\text{wave}} & = \text{Conv1D}(\mathbf{X}, \mathcal{F})                                                                 \\
-%                                  & = \bigcup_{s \in \mathbb{S}} \mathbf{X} \ast \mathcal{W}_s \in \mathbb{R}^{B \times C \times S \times L}
-%     \end{aligned}
-% \end{equation}
-
-% where $\ast$ denotes cross-correlation with reflection padding for boundary alignment. The transform preserves temporal resolution through same-stride ($\text{stride}=1$) convolution across $S$ parallel scale dimensions. See \figurename~\ref{fig:wavelet-transform} for an illustration of the wavelet kernels and their input-output relationships.
+Our bidirectional attention significantly reduces computational complexity compared to standard multi-head attention. For feature maps with $C$ channels and length $L$, multi-head attention with $h$ heads requires $\mathcal{O}(hCL^2)$ operations for computing attention weights. In contrast, our single-head design with 8× channel reduction requires only $\mathcal{O}(\frac{C}{8}L^2)$ operations. Additionally, while multi-head attention needs separate projection matrices for each head (totaling $3hC^2$ parameters), our approach uses only $3 \times \frac{C^2}{8}$ parameters shared across both attention directions. Importantly, we treat both modalities $\mathbf{X}$ and $\mathbf{Y}$ as equally important by allowing each to serve as both query and key in the attention computation. This symmetric design ensures fair representation learning, as neither modality is privileged over the other—unlike asymmetric attention where one modality only provides keys while the other provides queries. 
 
 
-% \begin{figure}[tb]
-%     \centering
-%     \includegraphics[width=\linewidth]{wavelet-transform.pdf}
-%     \caption{(Top) Normalized Morlet-style wavelet kernels at scales [4, 8, 16]. (Bottom) Input–output relationships: Gaussian white noise input (top–left) and its filtered components using the respective wavelets (red: $s=4$, blue: $s=8$, green: $s=16$). Responses exhibit progressive high–frequency suppression and temporal smoothing with increasing scale. The visualizer implements bank normalization and preserves temporal resolution via same–padding convolutions (using a $\beta$–spline differentiable implementation).}
-
-%     \label{fig:wavelet-transform}
-% \end{figure}
-
-% We optimize both signal-space and wavelet-domain reconstructions through:
-
-% \begin{equation}
-%     \mathcal{L} = \lambda_1 \|\mathbf{\hat{X}} - \mathbf{X}\|_2^2 + \lambda_2 \|\mathbf{\hat{X}}_{\text{wave}} - \mathbf{X}_{\text{wave}}\|_2^2
-% \end{equation}
-
-% where $\lambda_1=1$, $\lambda_2=0.5$ balance reconstruction error and wavelet transform loss.
-
-% \subsection{Wavelet-Domain Spectral Regularization}
-% \label{subsec:wavelet}
-
-% Traditional MSE loss  is not enough to capture the complex structure of the signal. We propose a wavelet loss term to enforce the reconstructed output to be consistent across all scales. Given an input tensor sequence $\mathbf{x} \in \mathbb{R}^{B \times C \times L}$ where $B$, $C$, and $L$ denote batch size, channels, and temporal length respectively, we construct a learnable filter bank $\mathcal{F} \in \mathbb{R}^{S \times 1 \times K}$ through the following parameterization:
-
-% \begin{equation}
-%     \label{eq:wavelet}
-%     \mathcal{W}_s(\tau) = \operatorname{Norm} \left(\cos\left(\frac{t}{s}\tau\right) \odot \mathcal{G}(\tau,s)\right)
-% \end{equation}
-
-% where $\mathcal{G}(\tau,s) = \exp(-\tau^2/(2s^2))$ represents the Gaussian envelope function, $s \in \mathbb{S}$ enumerates the wavelet scale parameters, and $K=4s_{\text{max}}$ determines the kernel size from the maximum scale $s_{\text{max}}$ to ensure sufficient spatial support. Each filter undergoes $L_2$-normalization to preserve energy consistency across multiple scales.
-
-% The discrete wavelet transform is implemented as asymmetric depth-wise separable convolution with spectral preservation properties:
-
-% \begin{equation}
-%     \begin{aligned}
-%         \mathbf{X}_{\text{wave}} & = \text{Conv1D}(\mathbf{X}, \mathcal{F})                                                                 \\
-%                                  & = \bigcup_{s \in \mathbb{S}} \mathbf{X} \ast \mathcal{W}_s \in \mathbb{R}^{B \times C \times S \times L}
-%     \end{aligned}
-% \end{equation}
-
-% Reflection padding strategy mitigates boundary artifacts while maintaining temporal resolution through stride-1 convolution across $S$ parallel scale dimensions. \figurename~\ref{fig:wavelet-transform} illustrates how wavelet kernels at different scales filter input signals.
-
-% \begin{figure}[tb]
-%     \centering
-%     \includegraphics[width=0.7\linewidth]{wavelet-transform.pdf}
-%     \caption{(Top) Normalized Morlet wavelet kernels spanning scales \( s \in \{4, 8, 16\} \), designed to capture variable temporal-spectral features. (Bottom) Example analysis of a synthetic signal: Gaussian white noise (top-left) decomposed into distinct frequency components (red: \( s=4 \), high-frequency; blue: \( s=8 \), mid-frequency; green: \( s=16 \), low-frequency). Larger scales broaden temporal support for low-frequency emphasis, while smaller scales localize high-frequency transients.
-%     }
-
-%     \label{fig:wavelet-transform}
-% \end{figure}
-
-% Our joint optimization framework combines both signal-space and wavelet-domain consistency through an adaptive loss weighting mechanism:
-
-% \begin{equation}
-%     \mathcal{L} = \lambda_1\|\mathbf{\hat{X}} - \mathbf{X}\|_{2}^2 + \lambda_2\sum_{s\in\mathbb{S}} \|\mathbf{\hat{X}}_{\text{wave}}^{(s)} - \mathbf{X}_{\text{wave}}^{(s)}\|_{2}^2
-% \end{equation}
-
-% where $\lambda_1$ and $\lambda_2$ represent empirically optimized weighting and the second term denotes the norm over wavelet subbands. This dual-domain regularization ensures simultaneous preservation of  temporal features and spectral distribution.
 
 \subsection{Wavelet-Domain Spectral Regularization}
 \label{subsec:wavelet}
@@ -359,7 +255,7 @@ This bidirectional design, with shared parameters, efficiently refines both moda
 Standard MSE loss alone does not fully capture a signal's complex structure. To address this, we introduce a wavelet loss that enforces reconstruction consistency across multiple scales. For an input tensor $\mathbf{x}\in\mathbb{R}^{B\times C\times L}$ (with batch size $B$, channels $C$, and length $L$), we build a learnable filter bank $\mathcal{F}\in\mathbb{R}^{S\times 1\times K}$ parameterized by
 \begin{equation}
     \label{eq:wavelet}
-    \mathcal{W}_s = \operatorname{Norm}\Bigl(\cos\Bigl(\frac{t}{s}\tau\Bigr) \odot \mathcal{G}(\tau,s)\Bigr),
+    \mathcal{W}_s = \operatorname{Norm}\Bigl(\cos\Bigl(\frac{\tau}{s}\Bigr) \odot \mathcal{G}(\tau,s)\Bigr),
 \end{equation}
 where $\mathcal{G}(\tau,s)=\exp\left(-\frac{\tau^2}{2s^2}\right)$, $s\in\mathbb{S}$ are the scale parameters, $K=4s_{\text{max}}$ sets the kernel size, and $\tau$ is the index within $-2K$ and $2K$. Each filter is $L_2$-normalized to maintain energy consistency.
 
@@ -372,7 +268,7 @@ We implement the discrete wavelet transform as an asymmetric depth-wise 1D convo
 \end{equation}
 Reflection padding is used to mitigate boundary artifacts while preserving temporal resolution. \figurename~\ref{fig:wavelet-transform} illustrates example wavelet kernels and their filtering effects.
 
-\begin{figure}[tb]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{wavelet-transform.pdf}
     \caption{(Top) Normalized Morlet wavelet kernels spanning scales \( s \in \{4, 8, 16\} \), designed to capture variable temporal-spectral features. (Bottom) Example analysis of a synthetic signal: Gaussian white noise (top-left) decomposed into distinct frequency components (red: \( s=4 \), high-frequency; blue: \( s=8 \), mid-frequency; green: \( s=16 \), low-frequency). Larger scales broaden temporal support for low-frequency emphasis, while smaller scales localize high-frequency transients.
@@ -425,21 +321,18 @@ The dataset is partitioned with anomaly detection in mind. The training (11,509 
 
 \subsection{Baseline Models}
 
-We compare our method against several state-of-the-art reconstruction-based models: \textbf{CNNAE} utilizing 1D convolutional layers for the encoder and an MLP for the decoder; \textbf{CNNAE+Attention} that augments CNNAE with temporal self-attention modules; domain-specific \textbf{TrID} embedding spectral correlation priors; and the \textbf{Transformer AE} constructed with stacked multi-head attention layers for global context modeling. All baselines follow the standard autoencoder paradigm where inputs are reconstructed from bottleneck embeddings, and each model is trained using identical protocols and hyperparameter tuning strategies for fair comparison.
+We compare our method against several state-of-the-art reconstruction-based models: \textbf{CNNAE} utilizing 1D convolutional layers for the encoder and an MLP for the decoder; \textbf{CNNAE+Attention} that augments CNNAE with standard temporal self-attention modules (not bidirectional); and domain-specific \textbf{TrID} embedding spectral correlation priors, which we evaluate in two variants: \textbf{TrID (Signal)} using only signal input and \textbf{TrID (Spectrum)} using only spectrum input. Additionally, we include the \textbf{Transformer AE} constructed with stacked multi-head attention layers for global context modeling. Notably, while TrID processes a single input modality (either signal or spectrum), all other baseline methods (CNNAE, CNNAE+Attention, and Transformer AE) utilize both signal and spectrum inputs. All baselines follow the standard autoencoder paradigm where inputs are reconstructed from bottleneck embeddings, and each model is trained using identical protocols and hyperparameter tuning strategies for fair comparison.
 
 \subsection{Evaluation Results}
 
-As shown in Table \ref{tab:main_results}, DualAttWaveNet achieves state-of-the-art performance across all key metrics. It records the highest AUC score (0.9327), surpassing the best baseline by 1.6\% and showing a 36.9\% absolute improvement over the Transformer AE (0.6812). Moreover, our framework completes inference in 0.5409s—46\% of TrID's 1.0156s—while maintaining competitive F1 score parity (0.8351) with lightweight models like CNNAE (0.8054). Notably, the F1 score of DualAttWaveNet exhibits only a minor 0.3\% performance drop relative to the task-specialized TrID (0.8321), effectively balancing precision and recall through integrated dual-attention mechanisms.
+As shown in Table \ref{tab:main_results}, DualAttWaveNet achieves state-of-the-art performance across all key metrics. It records the highest AUC score (0.9327), surpassing the best baseline by 1.6\% and showing a 36.9\% absolute improvement over the Transformer AE (0.6812). Moreover, our framework completes inference in 0.5409s—46\% of TrID (Signal)'s 1.0156s—while maintaining competitive F1 score parity (0.8351) with lightweight models like CNNAE (0.8054). Notably, the F1 score of DualAttWaveNet exhibits only a minor 0.3\% performance drop relative to the task-specialized TrID (Signal) (0.8321), effectively balancing precision and recall through integrated dual-attention mechanisms.
 
-Baseline analyses reveal key architectural limitations: the Transformer AE's stacked multi-head attention layers incur substantial latency (1.8354s) and suffer from overparameterization, resulting in significant performance degradation (–22.5\% F1 compared to our method). Although domain-specific TrID achieves near-parity accuracy (0.8318), its AUC score of 0.8318 indicates an overfitting to spectral correlation priors. Similarly, the temporal attention in CNNAE+Attention increases computation time by 3.6× over vanilla CNNAE (0.5969s vs. 0.1654s) while degrading AUC by 5.2\%, highlighting the inefficiency of ill-configured attention modules compared to our optimized dual-attention design.
 
-As visualized in \figurename~\ref{fig:roc_comparison}, the ROC curves clearly illustrate the discriminative power among competing models. DualAttWaveNet's left-skewed curve (AUC = 0.9327) dominates the upper-left quadrant, achieving an 83.5\% true positive rate at less than 10\% false positives. In contrast, the ROC trajectory of CNNAE+Attention drifts rightward (AUC = 0.8719), and Transformer AE hovers near the chance line (AUC = 0.6812), reflecting their inability to learn robust decision boundaries despite higher computational cost. \figurename~\ref{fig:confusion_matrix} further reveals class-specific recognition patterns across the evaluated models.
-
-\begin{table}[t]
+\begin{table}[htbp]
     \caption{Performance Comparison of DualAttWaveNet Against Baseline Models}
     \label{tab:main_results}
     \centering
-    \resizebox{\linewidth}{!}{
+    \resizebox{0.9\linewidth}{!}{
         \begin{tabular}{lcccc}
             \toprule
             \textbf{Model}  & \textbf{Accuracy (\%) } $\uparrow$ & \textbf{F1 Score} $\uparrow$ & \textbf{AUC}$\uparrow$ & \textbf{Time(s)} $\downarrow$ \\
@@ -449,31 +342,43 @@ As visualized in \figurename~\ref{fig:roc_comparison}, the ROC curves clearly il
             % LinearAE        & 0.8149                             & 0.8149                       & 0.9176                 & 0.0966                        \\
             CNNAE           & 0.8020                             & 0.8054                       & 0.8825                 & 0.1654                        \\
             CNNAE+Attention & 0.7695                             & 0.7691                       & 0.8719                 & 0.5969                        \\
-            TrID            & 0.8318                             & 0.8321                       & 0.8318                 & 1.0156                        \\
+            TrID (Signal)            & 0.8318                             & 0.8321                       & 0.8318                 & 1.0156                        \\
+            TrID (Spectrum)            & 0.7112                        & 0.6838                      & 0.7106                 & 1.0143                        \\
             Transformer AE  & 0.6812                             & 0.5921                       & 0.6812                 & 1.8354                        \\
             \bottomrule
         \end{tabular}}
 \end{table}
 
-\begin{figure}[t]
+
+
+Baseline analyses reveal key architectural limitations: the Transformer AE's stacked multi-head attention layers incur substantial latency (1.8354s) and suffer from overparameterization, resulting in significant performance degradation (–22.5\% F1 compared to our method). We evaluate TrID in both signal and spectrum domains, with TrID (Spectrum) showing significantly degraded performance (0.6838 F1) compared to TrID (Signal) (0.8321 F1). Although domain-specific TrID (Signal) achieves near-parity accuracy (0.8318), its AUC score of 0.8318 indicates an overfitting to spectral correlation priors. Similarly, the temporal attention in CNNAE+Attention increases computation time by 3.6× over vanilla CNNAE (0.5969s vs. 0.1654s) while degrading AUC by 5.2\%, highlighting the inefficiency of ill-configured attention modules compared to our optimized dual-attention design. As visualized in \figurename~\ref{fig:roc_comparison}, the ROC curves clearly illustrate the discriminative power among competing models. DualAttWaveNet's left-skewed curve (AUC = 0.9327) dominates the upper-left quadrant, achieving an 83.5\% true positive rate at less than 10\% false positives. 
+
+\begin{figure*}[htbp]
     \centering
-    \includegraphics[width=0.7\linewidth]{roc-comparison.pdf}
+    \includegraphics[width=0.88\linewidth]{confusion_new.pdf}
+    \caption{Confusion matrix for DualAttWaveNet and other baseline models.}
+    \label{fig:confusion_matrix}
+\end{figure*}
+
+
+
+
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{roc-comparison.pdf}
     \caption{ROC curves for DualAttWaveNet and baseline models. DualAttWaveNet achieves the highest AUC score.}
     \label{fig:roc_comparison}
 \end{figure}
 
-\begin{figure*}[tb]
-    \centering
-    \includegraphics[width=\linewidth]{confusion.pdf}
-    \caption{Confusion matrix for DualAttWaveNet and other baseline models.}
-    \label{fig:confusion_matrix}
-\end{figure*}
+
 
 % The temporal localization parameter $t$ in Eq. \ref{eq:wavelet} governs the precision of interference feature extraction. Our experiments show that setting $t=2$ yields peak performance (0.9327 AUC). Values of $t=1$ cause a 0.7\% AUC drop due to over-localization, while larger values (e.g., $t=16$) blur critical temporal details, leading to a 4.5\% AUC degradation. These findings confirm that $t=2$ is the optimal choice for our model.
 
 
 
-% \begin{table}[t]
+% \begin{table}[htbp]
 %     \centering
 %     \caption{Choosing Temporal Localization Parameter $t$}
 %     \label{tab:experiment-results}
@@ -493,7 +398,7 @@ As visualized in \figurename~\ref{fig:roc_comparison}, the ROC curves clearly il
 
 As shown in Table \ref{tab:ablation}, the full DualAttWaveNet achieves the best performance with 83.51\% accuracy, 83.51\% F1 score, and 0.9327 AUC. Removing the mutual attention mechanism ("w/o Mutual Attention") causes consistent performance drops (0.6\% accuracy, 0.6\% F1, 0.3\% AUC). Disabling the wavelet loss ("w/o Wavelet Loss") further degrades accuracy by 1.0\%, proving the necessity of joint time-frequency optimization. The vanilla implementation exhibits significant performance limitations (79.95\% accuracy, 0.9175 AUC), demonstrating a 3.6\% accuracy gap compared to the full model, which highlights the collective contribution of our dual-attention design and spectral-aware constraints to robust classification capability.
 
-\begin{table}[t]
+\begin{table}[htbp]
     \caption{Ablation Study of DualAttWaveNet Components}
     \label{tab:ablation}
     \centering
