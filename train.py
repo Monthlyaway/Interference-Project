@@ -33,11 +33,13 @@ def main(args):
     # model = TransformerVAE(
     #     seq_len=800, latent_dim=args.latent_dim, lr=args.lr, alpha=args.alpha)
     # model = CNNAEAttention(latent_dim=args.latent_dim, lr=args.lr)
-    model = CDMA_Net(lr=args.lr)
+    # model = CDMA_Net(lr=args.lr)
+
+    model = TrID_Signal(seq_len=800, embedding_dim=args.latent_dim, lr=args.lr)
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val/loss',
-        filename='cdma_epoch={epoch}-step={step}-val_loss={val/loss:.2f}',
+        filename='trid_signal_epoch={epoch}-step={step}-val_loss={val/loss:.2f}',
         auto_insert_metric_name=False,
         save_top_k=2,
         mode='min'
