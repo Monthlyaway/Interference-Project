@@ -8,3 +8,4 @@ from .transformer_vae import TransformerVAE
 from .linear_ae import LinearAE
 from .cnn_ae_attention import CNNAEAttention
 from .cdma import CDMA_Net
+from .trid_signal import TrID_Signal
