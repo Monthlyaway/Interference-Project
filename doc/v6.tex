@@ -47,7 +47,7 @@
 \maketitle
 
 \begin{abstract}
-    The escalating overlap between non-geostationary orbit (NGSO) and geostationary orbit (GSO) satellite frequency allocations necessitates accurate interference detection methods that address two pivotal technical gaps: computationally efficient signal analysis for real-time operation, and robust anomaly discrimination under varying interference patterns.  Existing deep learning approaches employ encoder-decoder anomaly detectors that threshold input-output discrepancies for robustness. While the transformer-based TrID model achieves state-of-the-art performance (AUC: 0.8318, F1: 0.8321), its multi-head attention incurs huge computation time, and its decoupled training of time-frequency models overlooks cross-domain dependencies. To overcome these problems, we propose DualAttWaveNet. A bidirectional attention fusion layer dynamically correlates time-frequency samples using parameter-efficient cross-attention routing. A wavelet-regularized reconstruction loss enforces multi-scale consistency.  We train the model on public dataset which consists of 48 hours of satellite signals. Experiments show that compared to TrID, DualAttWaveNet improves AUC by 12\% and reduces inference time by 50\% to 540ms per batch while maintaining F1-score.
+    The increasing overlap between non-geostationary orbit (NGSO) and geostationary orbit (GSO) satellite frequency allocations necessitates accurate interference detection methods that address two pivotal technical gaps: computationally efficient signal analysis for real-time operation, and robust anomaly discrimination under varying interference patterns.  Existing deep learning approaches employ encoder-decoder anomaly detectors that threshold input-output discrepancies for robustness. While the transformer-based TrID model achieves state-of-the-art performance (AUC: 0.8318, F1: 0.8321), its multi-head attention incurs huge computation time, and its decoupled training of time-frequency models overlooks cross-domain dependencies. To overcome these problems, we propose DualAttWaveNet. A bidirectional attention fusion layer dynamically correlates time-frequency samples using parameter-efficient cross-attention routing. A wavelet-regularized reconstruction loss enforces multi-scale consistency.  We train the model on public dataset which consists of 48 hours of satellite signals. Experiments show that compared to TrID, DualAttWaveNet improves AUC by 12\% and reduces inference time by 50\% to 540ms per batch while maintaining F1-score.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -193,7 +193,7 @@ Our bidirectional attention significantly reduces computational complexity compa
 \subsection{Wavelet-Domain Spectral Regularization}
 \label{subsec:wavelet}
 
-Standard MSE loss alone does not fully capture a signal's complex structure. To address this, we introduce a wavelet loss that enforces reconstruction consistency across multiple scales. For an input tensor $\mathbf{x}\in\mathbb{R}^{B\times C\times L}$ (with batch size $B$, channels $C$, and length $L$), we build a learnable filter bank $\mathcal{F}\in\mathbb{R}^{S\times 1\times K}$ parameterized by
+Standard MSE loss alone does not fully capture a signal's complex structure. To address this, we introduce a wavelet loss that enforces reconstruction consistency across multiple scales. For an input tensor $\mathbf{x}\in\mathbb{R}^{B\times C\times L}$ (with batch size $B$, channels $C$, and length $L$), we build a filter bank $\mathcal{F}\in\mathbb{R}^{S\times 1\times K}$ parameterized by
 \begin{equation}
     \label{eq:wavelet}
     \mathcal{W}_s = \operatorname{Norm}\Bigl(\cos\Bigl(\frac{\tau}{s}\Bigr) \odot \mathcal{G}(\tau,s)\Bigr),
@@ -272,7 +272,7 @@ As shown in Table \ref{tab:main_results}, DualAttWaveNet achieves state-of-the-a
 \begin{figure}[tbp]
     \centering
     \includegraphics[width=0.8\linewidth]{roc-comparison.pdf}
-    \caption{ROC curves for DualAttWaveNet and baseline models. DualAttWaveNet achieves the highest AUC score.}
+    \caption{ROC curves for DualAttWaveNet and baseline models trained on both inputs. DualAttWaveNet achieves the highest AUC score.}
     \label{fig:roc_comparison}
 \end{figure}
 
